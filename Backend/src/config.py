@@ -4,7 +4,7 @@ Configuration settings for the FastAPI application
 """
 
 import os
-from typing import List
+from typing import List, Set
 
 class Settings:
     # Application settings
@@ -34,13 +34,24 @@ class Settings:
     RESULTS_FOLDER: str = os.getenv("RESULTS_FOLDER", "results")
     
     # Allowed file extensions
-    ALLOWED_EXTENSIONS: set = {'pdf', 'docx', 'jpg', 'jpeg', 'png', 'bmp', 'tiff'}
+    ALLOWED_EXTENSIONS: Set[str] = {'pdf', 'docx', 'jpg', 'jpeg', 'png', 'bmp', 'tiff'}
     
     # CORS settings
     CORS_ORIGINS: List[str] = os.getenv("CORS_ORIGINS", "*").split(",")
     
     # Logging settings
     LOG_LEVEL: str = os.getenv("LOG_LEVEL", "INFO")
+    
+    # Create upload directories
+    def __post_init__(self):
+        import os
+        os.makedirs(self.UPLOAD_FOLDER, exist_ok=True)
+        os.makedirs(self.RESULTS_FOLDER, exist_ok=True)
 
 # Create settings instance
 settings = Settings()
+
+# Ensure directories exist
+import os
+os.makedirs(settings.UPLOAD_FOLDER, exist_ok=True)
+os.makedirs(settings.RESULTS_FOLDER, exist_ok=True)

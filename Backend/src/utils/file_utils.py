@@ -7,6 +7,8 @@ import os
 import shutil
 from pathlib import Path
 from typing import Optional
+from datetime import datetime
+from werkzeug.utils import secure_filename
 from ..config import settings
 
 def ensure_upload_directory():
@@ -44,9 +46,17 @@ def get_file_size(file_path: str) -> int:
 
 def create_unique_filename(original_filename: str) -> str:
     """Create unique filename with timestamp"""
-    from datetime import datetime
-    from werkzeug.utils import secure_filename
-    
     secure_name = secure_filename(original_filename)
     timestamp = datetime.utcnow().strftime("%Y%m%d_%H%M%S")
     return f"{timestamp}_{secure_name}"
+
+def save_uploaded_file(file_content: bytes, filename: str) -> str:
+    """Save uploaded file and return the path"""
+    ensure_upload_directory()
+    unique_filename = create_unique_filename(filename)
+    file_path = os.path.join(settings.UPLOAD_FOLDER, unique_filename)
+    
+    with open(file_path, "wb") as buffer:
+        buffer.write(file_content)
+    
+    return file_path

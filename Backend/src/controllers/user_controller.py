@@ -7,6 +7,7 @@ from fastapi import HTTPException, status
 from ..schemas.user_schemas import UserCreate, UserLogin, UserResponse
 from ..models.user_model import user_model
 from ..utils.auth_utils import hash_password, verify_password, create_access_token
+from ..utils.response_utils import create_success_response, handle_validation_error
 from typing import Dict, Any
 
 class UserController:
@@ -63,11 +64,14 @@ class UserController:
             updated_at=created_user["updated_at"]
         )
         
-        return {
-            access_token=access_token,
-            token_type="bearer",
-            user=user_response.dict()
-        }
+        return create_success_response(
+            message="User registered successfully",
+            data={
+                "access_token": access_token,
+                "token_type": "bearer",
+                "user": user_response.dict()
+            }
+        )
     
     async def login_user(self, login_data: UserLogin) -> Dict[str, Any]:
         """User login"""
@@ -88,7 +92,6 @@ class UserController:
         }
         access_token = create_access_token(token_data)
         
-        # Convert to response format
         user_response = UserResponse(
             _id=user["_id"],
             username=user["username"],
@@ -99,11 +102,14 @@ class UserController:
             updated_at=user["updated_at"]
         )
         
-        return {
-            access_token=access_token,
-            token_type="bearer",
-            user=user_response.dict()
-        }
+        return create_success_response(
+            message="Login successful",
+            data={
+                "access_token": access_token,
+                "token_type": "bearer",
+                "user": user_response.dict()
+            }
+        )
     
     async def get_current_user_profile(self, user: Dict[str, Any]) -> Dict[str, Any]:
         """Get current user profile"""
@@ -116,7 +122,10 @@ class UserController:
             created_at=user["created_at"],
             updated_at=user["updated_at"]
         )
-        return user_response.dict()
+        return create_success_response(
+            message="User profile retrieved successfully",
+            data=user_response.dict()
+        )
 
 # Create global instance
 user_controller = UserController()

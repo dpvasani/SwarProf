@@ -11,7 +11,6 @@ from datetime import datetime
 from pathlib import Path
 from typing import Dict, Any, Optional, List
 from fastapi import HTTPException, UploadFile, status
-from werkzeug.utils import secure_filename
 from bson import ObjectId
 from doctr.io import DocumentFile
 from doctr.models import ocr_predictor
@@ -21,6 +20,8 @@ import re
 from ..schemas.artist_schemas import ArtistInfo
 from ..models.artist_model import artist_model
 from ..config import settings
+from ..utils.file_utils import save_uploaded_file, cleanup_temp_file, is_allowed_file
+from ..utils.response_utils import handle_validation_error, handle_not_found_error
 
 # Configure Gemini API
 genai.configure(api_key=settings.GEMINI_API_KEY)
@@ -28,8 +29,6 @@ genai.configure(api_key=settings.GEMINI_API_KEY)
 class ArtistController:
     
     def __init__(self):
-        # Create upload directory if it doesn't exist
-        os.makedirs(settings.UPLOAD_FOLDER, exist_ok=True)
         self.ocr_model = None
         self.gemini_model = None
     
@@ -42,10 +41,6 @@ class ArtistController:
         except Exception as e:
             print(f"❌ Failed to initialize models: {e}")
             raise
-    
-    def _allowed_file(self, filename: str) -> bool:
-        """Check if file extension is allowed"""
-        return '.' in filename and filename.rsplit('.', 1)[1].lower() in settings.ALLOWED_EXTENSIONS
     
     async def extract_text(self, file_path: str, dpi: int = 300) -> str:
         """Extract text from PDF, DOCX, or image files - same as original"""
@@ -216,7 +211,7 @@ Please analyze the above text and provide the extracted information in the exact
         Maintains the same accuracy as the original Flask implementation
         """
         # Validate file
-        if not self._allowed_file(file.filename):
+        if not is_allowed_file(file.filename):
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail=f"File type not allowed. Supported formats: {', '.join(settings.ALLOWED_EXTENSIONS)}"
@@ -229,16 +224,11 @@ Please analyze the above text and provide the extracted information in the exact
             )
         
         try:
-            # Save uploaded file
-            filename = secure_filename(file.filename)
-            timestamp = datetime.utcnow().strftime("%Y%m%d_%H%M%S")
-            saved_filename = f"{timestamp}_{filename}"
-            file_path = os.path.join(settings.UPLOAD_FOLDER, saved_filename)
-            
-            # Save file to disk
-            with open(file_path, "wb") as buffer:
-                content = await file.read()
-                buffer.write(content)
+            # Save uploaded file using utility
+            content = await file.read()
+            file_path = save_uploaded_file(content, file.filename)
+            filename = file.filename
+            saved_filename = os.path.basename(file_path)
             
             print(f"Processing file: {filename} (saved as: {saved_filename})")
             
@@ -279,10 +269,7 @@ Please analyze the above text and provide the extracted information in the exact
             print(f"✅ Results saved to MongoDB with ID: {artist_id}")
             
             # Clean up temporary file
-            try:
-                os.remove(file_path)
-            except Exception as cleanup_error:
-                print(f"Warning: Could not clean up temporary file: {cleanup_error}")
+            cleanup_temp_file(file_path)
             
             return {
                 "success": True,
@@ -338,10 +325,7 @@ Please analyze the above text and provide the extracted information in the exact
         try:
             artist = await artist_model.find_by_id(artist_id)
             if not artist:
-                raise HTTPException(
-                    status_code=status.HTTP_404_NOT_FOUND, 
-                    detail="Artist not found"
-                )
+                raise handle_not_found_error("Artist")
             
             # Convert ObjectId to string
             artist["_id"] = str(artist["_id"])
@@ -400,10 +384,7 @@ Please analyze the above text and provide the extracted information in the exact
         try:
             result = await artist_model.find_by_id(result_id)
             if not result:
-                raise HTTPException(
-                    status_code=status.HTTP_404_NOT_FOUND, 
-                    detail="Result not found"
-                )
+                raise handle_not_found_error("Result")
             
             # Convert ObjectId to string
             result["_id"] = str(result["_id"])

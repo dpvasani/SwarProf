@@ -1,4 +1,4 @@
-# Artist Information Extraction API - FastAPI Version
+# Artist Information Extraction API - FastAPI
 
 A powerful FastAPI-based API for extracting artist information from documents using AI and OCR technologies.
 
@@ -9,7 +9,7 @@ A powerful FastAPI-based API for extracting artist information from documents us
 - **User Authentication**: JWT-based authentication with role-based access control
 - **MongoDB Integration**: Persistent storage for users and extracted artist data
 - **RESTful API**: Clean, well-documented API endpoints
-- **High Accuracy**: Maintains the same extraction accuracy as the original Flask implementation
+- **High Accuracy**: Maintains the same extraction accuracy as the original implementation
 
 ## Technology Stack
 
@@ -23,34 +23,26 @@ A powerful FastAPI-based API for extracting artist information from documents us
 
 ## Installation
 
-1. **Clone the repository**
-   ```bash
-   git clone <repository-url>
-   cd Backend
-   ```
-
-2. **Install dependencies**
+1. **Install dependencies**
    ```bash
    pip install -r requirements.txt
    ```
 
-3. **Set up environment variables**
+2. **Set up environment variables**
    ```bash
    cp .env.example .env
    # Edit .env with your configuration
    ```
 
-4. **Start MongoDB**
+3. **Start MongoDB**
    ```bash
    # Using Docker
    docker run -d -p 27017:27017 --name mongodb mongo:latest
-   
-   # Or install MongoDB locally
    ```
 
-5. **Run the application**
+4. **Run the application**
    ```bash
-   python app.py
+   python -m src.main
    ```
 
 ## Configuration
@@ -73,13 +65,14 @@ A powerful FastAPI-based API for extracting artist information from documents us
 ### Authentication
 - `POST /auth/register` - Register new user
 - `POST /auth/login` - User login
+- `GET /auth/profile` - Get user profile
 
 ### Artist Extraction
-- `POST /extract` - Extract artist information from uploaded file
-- `GET /artists` - List all artists (paginated)
-- `GET /artists/{artist_id}` - Get specific artist
-- `GET /results` - List extraction results
-- `GET /results/{result_id}` - Get specific result
+- `POST /api/extract` - Extract artist information from uploaded file
+- `GET /api/artists` - List all artists (paginated)
+- `GET /api/artists/{artist_id}` - Get specific artist
+- `GET /api/results` - List extraction results
+- `GET /api/results/{result_id}` - Get specific result
 
 ### System
 - `GET /` - API documentation
@@ -111,103 +104,41 @@ curl -X POST "http://localhost:8000/auth/login" \
 
 ### Extract Artist Information
 ```bash
-curl -X POST "http://localhost:8000/extract" \
+curl -X POST "http://localhost:8000/api/extract" \
   -H "Authorization: Bearer YOUR_JWT_TOKEN" \
   -F "file=@artist_document.pdf"
 ```
 
-## Data Models
+## Project Structure
 
-### Artist Information Structure
-```json
-{
-  "artist_name": "Artist Name",
-  "guru_name": "Guru Name",
-  "gharana_details": {
-    "gharana_name": "Gharana Name",
-    "style": "Classical Style",
-    "tradition": "Cultural Tradition"
-  },
-  "biography": {
-    "early_life": "Early life details",
-    "background": "Background information",
-    "education": "Educational background",
-    "career_highlights": "Career highlights"
-  },
-  "achievements": [
-    {
-      "type": "award",
-      "title": "Award Title",
-      "year": "2023",
-      "details": "Award details"
-    }
-  ],
-  "contact_details": {
-    "social_media": {
-      "instagram": "@artist",
-      "facebook": "facebook.com/artist"
-    },
-    "contact_info": {
-      "phone": "+1234567890",
-      "email": "artist@example.com"
-    },
-    "address": {
-      "city": "City",
-      "state": "State",
-      "country": "Country"
-    }
-  },
-  "summary": "AI-generated summary",
-  "extraction_confidence": "high"
-}
 ```
-
-## Development
-
-### Project Structure
+Backend/src/
+├── main.py                    # FastAPI app entry point
+├── config.py                  # Configuration settings
+├── database.py               # Database connection
+├── controllers/
+│   ├── user_controller.py     # User management logic
+│   └── artist_controller.py   # Artist extraction logic
+├── models/
+│   ├── user_model.py         # User MongoDB operations
+│   └── artist_model.py       # Artist MongoDB operations
+├── routes/
+│   ├── user_routes.py        # Authentication endpoints
+│   └── artist_routes.py      # Artist extraction endpoints
+├── schemas/
+│   ├── user_schemas.py       # User Pydantic models
+│   └── artist_schemas.py     # Artist Pydantic models
+└── utils/
+    ├── auth_utils.py         # JWT & password utilities
+    ├── file_utils.py         # File handling utilities
+    └── response_utils.py     # Response formatting
 ```
-Backend/
-├── app.py                 # Main FastAPI application
-├── config.py             # Configuration settings
-├── database.py           # Database connection and utilities
-├── models.py             # Pydantic models
-├── auth.py               # Authentication utilities
-├── extraction_service.py # AI extraction service
-├── requirements.txt      # Python dependencies
-├── .env.example         # Environment variables template
-└── README.md            # This file
-```
-
-### Code Quality
-- Type hints throughout the codebase
-- Pydantic models for data validation
-- Comprehensive error handling
-- Modular architecture for maintainability
-- Async/await for better performance
 
 ## API Documentation
 
 Once the server is running, visit:
 - **Swagger UI**: http://localhost:8000/docs
 - **ReDoc**: http://localhost:8000/redoc
-
-## Migration from Flask
-
-This FastAPI version maintains 100% compatibility with the original Flask implementation while adding:
-- Better performance with async/await
-- Automatic API documentation
-- Enhanced data validation
-- Improved error handling
-- Modular architecture
-- Type safety
-
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Add tests if applicable
-5. Submit a pull request
 
 ## License
 
