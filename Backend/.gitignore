@@ -67,5 +67,6 @@ dump/
 ### Project specific
 src/.env
 src/.ev
+.ev
 Frontend/.env
 Backend/.env

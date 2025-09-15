@@ -7,7 +7,6 @@ from pydantic import BaseModel, Field
 from typing import Optional, List, Dict, Any
 from datetime import datetime
 from bson import ObjectId
-from .user_schemas import PyObjectId
 
 # Artist Information Models
 class SocialMedia(BaseModel):
@@ -62,13 +61,13 @@ class ArtistInfo(BaseModel):
     additional_notes: Optional[str] = None
 
 class ArtistDocument(BaseModel):
-    id: PyObjectId = Field(default_factory=PyObjectId, alias="_id")
+    id: str = Field(alias="_id")
     artist_info: ArtistInfo
     original_filename: str
     saved_filename: Optional[str] = None
     extracted_text: str
     extraction_status: str = Field(default="completed")
-    created_by: PyObjectId
+    created_by: str
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
 
