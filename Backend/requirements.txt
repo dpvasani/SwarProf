@@ -1,20 +1,27 @@
 # Core FastAPI dependencies
-fastapi==0.115.6
-uvicorn[standard]==0.34.0
+fastapi==0.116.1
+uvicorn==0.35.0
 python-multipart==0.0.20
 
 # Database
-motor==3.7.0
+pymongo==4.15.0
+motor==3.7.1
 
-# Authentication
-python-jose[cryptography]==3.3.0
-passlib[bcrypt]==1.7.4
+# Authentication / Security
+PyJWT==2.10.1
+bcrypt==4.3.0
 
 # Document processing and AI
-doctr==1.9.0
-google-generativeai==0.8.5
+python-doctr==1.0.0
 PyMuPDF==1.26.4
 
 # Utilities
 python-dotenv==1.1.1
-pydantic==2.11.7
+pydantic==2.11.9
+werkzeug==3.1.3
+
+# Optional / SDKs
+# The Gemini SDK referenced in code (`google.generativeai`) is not available
+# on PyPI under that package name; leave commented to avoid install errors.
+# If you have a private package or different client, install it or uncomment below
+# google-generativeai==0.8.5
