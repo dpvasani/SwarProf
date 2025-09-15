@@ -79,7 +79,7 @@ async def root():
 @app.get("/health")
 async def health_check():
     """Health check endpoint"""
-    from .db.dbconnect import get_database
+    from .database import get_database
     
     try:
         # Test MongoDB connection

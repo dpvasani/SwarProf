@@ -1,17 +1,16 @@
 #!/usr/bin/env python3
 """
-Artist routes for extraction and management
+Artist routes - converted from Flask to FastAPI
 """
 
 from fastapi import APIRouter, Depends, File, UploadFile, Query
 from typing import Dict, Any, Optional
-from ..schemas.artist_schemas import ExtractionResponse, PaginatedResponse
 from ..controllers.artist_controller import artist_controller
 from ..utils.auth_utils import get_current_user
 
 router = APIRouter()
 
-@router.post("/extract", response_model=ExtractionResponse)
+@router.post("/extract")
 async def extract_artist_info(
     file: UploadFile = File(...),
     current_user: Dict[str, Any] = Depends(get_current_user)
@@ -22,7 +21,7 @@ async def extract_artist_info(
     """
     return await artist_controller.extract_artist_info(file, current_user)
 
-@router.get("/artists", response_model=PaginatedResponse)
+@router.get("/artists")
 async def list_artists(
     page: int = Query(1, ge=1),
     limit: int = Query(10, ge=1, le=100),
@@ -40,7 +39,7 @@ async def get_artist(
     """Get specific artist by ID"""
     return await artist_controller.get_artist(artist_id, current_user)
 
-@router.get("/results", response_model=PaginatedResponse)
+@router.get("/results")
 async def list_results(
     page: int = Query(1, ge=1),
     limit: int = Query(10, ge=1, le=100),

@@ -76,26 +76,3 @@ class ArtistDocument(BaseModel):
         allow_population_by_field_name = True
         arbitrary_types_allowed = True
         json_encoders = {ObjectId: str}
-
-# Response Models
-class StandardResponse(BaseModel):
-    success: bool
-    message: str
-    data: Optional[Dict[str, Any]] = None
-
-class PaginatedResponse(BaseModel):
-    success: bool
-    total: int
-    page: int
-    limit: int
-    total_pages: int
-    data: List[Dict[str, Any]]
-
-class ExtractionResponse(BaseModel):
-    success: bool
-    artist_id: str
-    filename: str
-    extracted_text_length: int
-    extracted_text_preview: str
-    artist_info: ArtistInfo
-    message: str

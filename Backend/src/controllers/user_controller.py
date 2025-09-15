@@ -1,17 +1,17 @@
 #!/usr/bin/env python3
 """
-User controller for handling authentication and user management
+User controller - converted from Flask to FastAPI
 """
 
 from fastapi import HTTPException, status
-from ..schemas.user_schemas import UserCreate, UserLogin, UserResponse, TokenResponse
+from ..schemas.user_schemas import UserCreate, UserLogin, UserResponse
 from ..models.user_model import user_model
 from ..utils.auth_utils import hash_password, verify_password, create_access_token
 from typing import Dict, Any
 
 class UserController:
     
-    async def register_user(self, user_data: UserCreate) -> TokenResponse:
+    async def register_user(self, user_data: UserCreate) -> Dict[str, Any]:
         """Register a new user"""
         # Check if user already exists
         existing_user = await user_model.find_by_username_or_email(user_data.username)
@@ -63,12 +63,13 @@ class UserController:
             updated_at=created_user["updated_at"]
         )
         
-        return TokenResponse(
+        return {
             access_token=access_token,
-            user=user_response
-        )
+            token_type="bearer",
+            user=user_response.dict()
+        }
     
-    async def login_user(self, login_data: UserLogin) -> TokenResponse:
+    async def login_user(self, login_data: UserLogin) -> Dict[str, Any]:
         """User login"""
         # Find user by username or email
         user = await user_model.find_by_username_or_email(login_data.username_or_email)
@@ -98,14 +99,15 @@ class UserController:
             updated_at=user["updated_at"]
         )
         
-        return TokenResponse(
+        return {
             access_token=access_token,
-            user=user_response
-        )
+            token_type="bearer",
+            user=user_response.dict()
+        }
     
-    async def get_current_user_profile(self, user: Dict[str, Any]) -> UserResponse:
+    async def get_current_user_profile(self, user: Dict[str, Any]) -> Dict[str, Any]:
         """Get current user profile"""
-        return UserResponse(
+        user_response = UserResponse(
             _id=user["_id"],
             username=user["username"],
             email=user["email"],
@@ -114,6 +116,7 @@ class UserController:
             created_at=user["created_at"],
             updated_at=user["updated_at"]
         )
+        return user_response.dict()
 
 # Create global instance
 user_controller = UserController()
