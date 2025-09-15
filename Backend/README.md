@@ -42,7 +42,13 @@ A powerful FastAPI-based API for extracting artist information from documents us
 
 4. **Run the application**
    ```bash
-   cd Backend
+   # Method 1: Using server.py (recommended)
+   python server.py
+   
+   # Method 2: Using app.py directly
+   uvicorn app:app --reload
+   
+   # Method 3: Using src.main
    python -m src.main
    ```
 
