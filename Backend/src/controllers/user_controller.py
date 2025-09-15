@@ -55,7 +55,7 @@ class UserController:
         
         # Convert to response format
         user_response = UserResponse(
-            _id=created_user["_id"],
+            _id=str(created_user["_id"]),
             username=created_user["username"],
             email=created_user["email"],
             full_name=created_user["full_name"],
@@ -93,7 +93,7 @@ class UserController:
         access_token = create_access_token(token_data)
         
         user_response = UserResponse(
-            _id=user["_id"],
+            _id=str(user["_id"]),
             username=user["username"],
             email=user["email"],
             full_name=user["full_name"],
@@ -114,7 +114,7 @@ class UserController:
     async def get_current_user_profile(self, user: Dict[str, Any]) -> Dict[str, Any]:
         """Get current user profile"""
         user_response = UserResponse(
-            _id=user["_id"],
+            _id=str(user["_id"]),
             username=user["username"],
             email=user["email"],
             full_name=user["full_name"],

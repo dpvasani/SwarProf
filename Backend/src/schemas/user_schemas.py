@@ -3,34 +3,15 @@ from typing import Optional
 from datetime import datetime
 from bson import ObjectId
 
+
 class TokenResponse(BaseModel):
     access_token: str
     refresh_token: str
     token_type: str = "bearer"
-#!/usr/bin/env python3
-"""
-User-related Pydantic schemas for request/response validation
-"""
 
-from pydantic import BaseModel, Field, validator
-from typing import Optional
-from datetime import datetime
-from bson import ObjectId
 
-class PyObjectId(ObjectId):
-    @classmethod
-    def __get_validators__(cls):
-        yield cls.validate
-
-    @classmethod
-    def validate(cls, v):
-        if not ObjectId.is_valid(v):
-            raise ValueError("Invalid objectid")
-        return ObjectId(v)
-
-    @classmethod
-    def __get_pydantic_json_schema__(cls, schema):
-        return {"type": "string", "pattern": "^[a-fA-F0-9]{24}$"}
+# Pydantic v2 compatible ObjectId wrapper
+# For simplicity and compatibility with multiple pydantic versions, use string IDs in responses
 
 class UserCreate(BaseModel):
     username: str = Field(..., min_length=3, max_length=50)
@@ -53,15 +34,15 @@ class UserLogin(BaseModel):
     password: str
 
 class UserResponse(BaseModel):
-    id: PyObjectId = Field(default_factory=PyObjectId, alias="_id")
+    id: str = Field(alias="_id")
     username: str
     email: str
     full_name: str
     role: str
     created_at: datetime
     updated_at: datetime
-
-    class Config:
-        allow_population_by_field_name = True
-        arbitrary_types_allowed = True
-        json_encoders = {ObjectId: str}
+    model_config = {
+        "populate_by_name": True,
+        "arbitrary_types_allowed": True,
+        "json_encoders": {ObjectId: str}
+    }
