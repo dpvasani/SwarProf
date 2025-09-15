@@ -6,6 +6,12 @@ Configuration settings for the FastAPI application
 import os
 from typing import List, Set
 
+def create_directories():
+    """Create necessary directories"""
+    import os
+    os.makedirs("uploads", exist_ok=True)
+    os.makedirs("results", exist_ok=True)
+
 class Settings:
     # Application settings
     APP_NAME: str = "Artist Information Extraction API"
@@ -41,17 +47,9 @@ class Settings:
     
     # Logging settings
     LOG_LEVEL: str = os.getenv("LOG_LEVEL", "INFO")
-    
-    # Create upload directories
-    def __post_init__(self):
-        import os
-        os.makedirs(self.UPLOAD_FOLDER, exist_ok=True)
-        os.makedirs(self.RESULTS_FOLDER, exist_ok=True)
 
 # Create settings instance
 settings = Settings()
 
-# Ensure directories exist
-import os
-os.makedirs(settings.UPLOAD_FOLDER, exist_ok=True)
-os.makedirs(settings.RESULTS_FOLDER, exist_ok=True)
+# Create directories on import
+create_directories()

@@ -42,6 +42,7 @@ A powerful FastAPI-based API for extracting artist information from documents us
 
 4. **Run the application**
    ```bash
+   cd Backend
    python -m src.main
    ```
 
@@ -112,10 +113,15 @@ curl -X POST "http://localhost:8000/api/extract" \
 ## Project Structure
 
 ```
-Backend/src/
+Backend/
+├── requirements.txt          # Python dependencies
+├── .env.example             # Environment template
+├── README.md                # This documentation
+└── src/
 ├── main.py                    # FastAPI app entry point
 ├── config.py                  # Configuration settings
-├── database.py               # Database connection
+├── db/
+│   └── dbconnect.py          # Database connection
 ├── controllers/
 │   ├── user_controller.py     # User management logic
 │   └── artist_controller.py   # Artist extraction logic
@@ -129,9 +135,9 @@ Backend/src/
 │   ├── user_schemas.py       # User Pydantic models
 │   └── artist_schemas.py     # Artist Pydantic models
 └── utils/
-    ├── auth_utils.py         # JWT & password utilities
-    ├── file_utils.py         # File handling utilities
-    └── response_utils.py     # Response formatting
+    ├── auth_utils.py          # JWT & password utilities
+    ├── file_utils.py          # File handling utilities
+    └── response_utils.py      # Response formatting
 ```
 
 ## API Documentation
@@ -139,7 +145,3 @@ Backend/src/
 Once the server is running, visit:
 - **Swagger UI**: http://localhost:8000/docs
 - **ReDoc**: http://localhost:8000/redoc
-
-## License
-
-[Add your license information here]

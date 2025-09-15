@@ -22,6 +22,7 @@ from ..models.artist_model import artist_model
 from ..config import settings
 from ..utils.file_utils import save_uploaded_file, cleanup_temp_file, is_allowed_file
 from ..utils.response_utils import handle_validation_error, handle_not_found_error
+from werkzeug.utils import secure_filename
 
 # Configure Gemini API
 genai.configure(api_key=settings.GEMINI_API_KEY)

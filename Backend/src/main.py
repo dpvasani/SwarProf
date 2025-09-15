@@ -12,7 +12,7 @@ from .config import settings
 from .db.dbconnect import connect_to_mongo, close_mongo_connection
 from .routes.user_routes import router as user_router
 from .routes.artist_routes import router as artist_router
-from .services.extraction_service import extraction_service
+from .controllers.artist_controller import artist_controller
 
 
 @asynccontextmanager
@@ -20,7 +20,7 @@ async def lifespan(app: FastAPI):
     """Application lifespan events"""
     # Startup
     await connect_to_mongo()
-    await extraction_service.initialize()
+    await artist_controller.initialize()
     yield
     # Shutdown
     await close_mongo_connection()
@@ -79,7 +79,7 @@ async def root():
 @app.get("/health")
 async def health_check():
     """Health check endpoint"""
-    from .database import get_database
+    from .db.dbconnect import get_database
     
     try:
         # Test MongoDB connection
@@ -96,6 +96,19 @@ async def health_check():
         "gemini_configured": bool(settings.GEMINI_API_KEY),
         "timestamp": __import__('datetime').datetime.utcnow().isoformat()
     }
+
+
+if __name__ == "__main__":
+    import uvicorn
+    print("🚀 Starting Artist Information Extraction API (FastAPI)...")
+    print(f"📁 Upload folder: {settings.UPLOAD_FOLDER}")
+    print(f"🔑 Gemini API configured: {'Yes' if settings.GEMINI_API_KEY else 'No'}")
+    print(f"🗄️ MongoDB URL: {settings.MONGODB_URL}")
+    print(f"📄 Supported formats: {', '.join(settings.ALLOWED_EXTENSIONS)}")
+    print("🌐 API will be available at: http://localhost:8000")
+    print("📖 Documentation at: http://localhost:8000/docs")
+    
+    uvicorn.run("src.main:app", host=settings.HOST, port=settings.PORT, reload=settings.DEBUG)
 
 
 if __name__ == "__main__":

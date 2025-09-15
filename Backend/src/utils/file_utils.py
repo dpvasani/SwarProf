@@ -8,8 +8,16 @@ import shutil
 from pathlib import Path
 from typing import Optional
 from datetime import datetime
-from werkzeug.utils import secure_filename
 from ..config import settings
+
+def secure_filename(filename):
+    """Secure a filename by removing unsafe characters"""
+    import re
+    # Remove path separators and other unsafe characters
+    filename = re.sub(r'[^\w\s-.]', '', filename).strip()
+    # Replace spaces with underscores
+    filename = re.sub(r'[-\s]+', '_', filename)
+    return filename
 
 def ensure_upload_directory():
     """Ensure upload directory exists"""
