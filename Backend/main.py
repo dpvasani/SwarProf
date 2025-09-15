@@ -5,6 +5,7 @@ Converted from Flask with enhanced functionality and MongoDB integration
 """
 
 import os
+from dotenv import load_dotenv
 import json
 import fitz  # PyMuPDF
 import asyncio
@@ -17,7 +18,12 @@ from fastapi.responses import JSONResponse
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from doctr.io import DocumentFile
 from doctr.models import ocr_predictor
-import google.generativeai as genai
+# Make Gemini / google.generativeai optional so server can start without the SDK
+try:
+    import google.generativeai as genai
+except Exception:
+    genai = None
+    print("Warning: google.generativeai SDK not installed; Gemini features will be disabled.")
 import re
 from motor.motor_asyncio import AsyncIOMotorClient
 from pydantic import BaseModel, Field
@@ -52,6 +58,11 @@ MAX_FILE_SIZE = 16 * 1024 * 1024  # 16MB
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 os.makedirs(RESULTS_FOLDER, exist_ok=True)
 
+# Load environment variables from .ev file
+print("Loading .ev file:", os.path.abspath('.ev'))
+load_dotenv('.ev')
+print("Loaded MONGODB_URL:", os.getenv('MONGODB_URL'))
+
 # Environment variables
 MONGODB_URL = os.getenv('MONGODB_URL', 'mongodb://localhost:27017')
 DATABASE_NAME = os.getenv('DATABASE_NAME', 'artist_extraction_db')
@@ -59,8 +70,17 @@ JWT_SECRET = os.getenv('JWT_SECRET', 'your-secret-key-change-in-production')
 JWT_ALGORITHM = os.getenv('JWT_ALGORITHM', 'HS256')
 GEMINI_API_KEY = os.getenv('GEMINI_API_KEY', 'AIzaSyAVTP0198Qm3HSrwZn9jEle7ZcWPBBOMK8')
 
-# Configure Gemini API
-genai.configure(api_key=GEMINI_API_KEY)
+# Configure Gemini API (only if SDK is available)
+if genai is not None and GEMINI_API_KEY:
+    try:
+        genai.configure(api_key=GEMINI_API_KEY)
+    except Exception as e:
+        print(f"Warning: failed to configure Gemini SDK: {e}")
+else:
+    if genai is None:
+        print("Gemini SDK not available; skipping Gemini configuration.")
+    else:
+        print("GEMINI_API_KEY not set; Gemini features disabled.")
 
 # MongoDB connection
 client = AsyncIOMotorClient(MONGODB_URL)

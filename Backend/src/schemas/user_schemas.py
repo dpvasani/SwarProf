@@ -1,3 +1,12 @@
+from pydantic import BaseModel, Field, validator
+from typing import Optional
+from datetime import datetime
+from bson import ObjectId
+
+class TokenResponse(BaseModel):
+    access_token: str
+    refresh_token: str
+    token_type: str = "bearer"
 #!/usr/bin/env python3
 """
 User-related Pydantic schemas for request/response validation
@@ -20,15 +29,15 @@ class PyObjectId(ObjectId):
         return ObjectId(v)
 
     @classmethod
-    def __modify_schema__(cls, field_schema):
-        field_schema.update(type="string")
+    def __get_pydantic_json_schema__(cls, schema):
+        return {"type": "string", "pattern": "^[a-fA-F0-9]{24}$"}
 
 class UserCreate(BaseModel):
     username: str = Field(..., min_length=3, max_length=50)
-    email: str = Field(..., regex=r'^[\w\.-]+@[\w\.-]+\.\w+$')
+    email: str = Field(..., pattern=r'^[\w\.-]+@[\w\.-]+\.\w+$')
     full_name: str = Field(..., min_length=2, max_length=100)
     password: str = Field(..., min_length=6)
-    role: str = Field(default="user", regex=r'^(user|admin)$')
+    role: str = Field(default="user", pattern=r'^(user|admin)$')
 
     @validator('username')
     def username_alphanumeric(cls, v):

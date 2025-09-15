@@ -5,6 +5,19 @@ Configuration settings for the FastAPI application
 
 import os
 from typing import List, Set
+from pathlib import Path
+from dotenv import load_dotenv
+
+# Attempt to load .ev from project root (two levels up from this file: Backend/src -> Backend)
+project_root = Path(__file__).resolve().parents[1]
+dot_env_path = project_root / '.ev'
+if dot_env_path.exists():
+    load_dotenv(dot_env_path)
+    print(f"Loaded environment from: {dot_env_path}")
+else:
+    # Fallback to default dotenv behavior (current working directory)
+    load_dotenv()
+    print(f".ev not found at {dot_env_path}, attempted default load_dotenv()")
 
 def create_directories():
     """Create necessary directories"""

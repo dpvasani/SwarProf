@@ -1,0 +1,29 @@
+# FastAPI Artist Extraction API Environment Variables
+
+# Application Settings
+DEBUG=False
+HOST=0.0.0.0
+PORT=8000
+
+# Database Configuration
+MONGODB_URL=mongodb+srv://dpvasani56:dpvasani56@cluster0.wgvcesc.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0
+DATABASE_NAME=artist_extraction_db
+
+# Security Settings
+JWT_SECRET=your-super-secret-jwt-key-change-in-production
+JWT_ALGORITHM=HS256
+JWT_EXPIRATION_HOURS=24
+
+# AI/ML Configuration
+GEMINI_API_KEY=AIzaSyAVTP0198Qm3HSrwZn9jEle7ZcWPBBOMK8
+
+# File Upload Settings
+MAX_FILE_SIZE=16777216
+UPLOAD_FOLDER=uploads
+RESULTS_FOLDER=results
+
+# CORS Settings (comma-separated origins)
+CORS_ORIGINS=*
+
+# Logging
+LOG_LEVEL=INFO

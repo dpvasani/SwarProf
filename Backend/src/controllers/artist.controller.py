@@ -30,7 +30,7 @@ os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 os.makedirs(RESULTS_FOLDER, exist_ok=True)
 
 # Configure Gemini API - Use environment variable or default
-API_KEY = os.getenv('GEMINI_API_KEY', 'AIzaSyAVTP0198Qm3HSrwZn9jEle7ZcWPBBOMK8')
+API_KEY = os.getenv('GEMINI_API_KEY', '')
 genai.configure(api_key=API_KEY)
 
 def allowed_file(filename):

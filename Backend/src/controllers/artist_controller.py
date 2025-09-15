@@ -14,7 +14,12 @@ from fastapi import HTTPException, UploadFile, status
 from bson import ObjectId
 from doctr.io import DocumentFile
 from doctr.models import ocr_predictor
-import google.generativeai as genai
+# Make Gemini optional so server can start without SDK
+try:
+    import google.generativeai as genai
+except Exception:
+    genai = None
+    print("Warning: google.generativeai SDK not installed; Gemini features will be disabled in ArtistController.")
 import re
 
 from ..schemas.artist_schemas import ArtistInfo
@@ -24,8 +29,17 @@ from ..utils.file_utils import save_uploaded_file, cleanup_temp_file, is_allowed
 from ..utils.response_utils import handle_validation_error, handle_not_found_error
 from werkzeug.utils import secure_filename
 
-# Configure Gemini API
-genai.configure(api_key=settings.GEMINI_API_KEY)
+# Configure Gemini API (only if SDK is available and key provided)
+if genai is not None and settings.GEMINI_API_KEY:
+    try:
+        genai.configure(api_key=settings.GEMINI_API_KEY)
+    except Exception as e:
+        print(f"Warning: failed to configure Gemini SDK in ArtistController: {e}")
+else:
+    if genai is None:
+        print("Gemini SDK not available in ArtistController; skipping configuration.")
+    else:
+        print("GEMINI_API_KEY not set; Gemini features disabled in ArtistController.")
 
 class ArtistController:
     
@@ -36,12 +50,30 @@ class ArtistController:
     async def initialize(self):
         """Initialize OCR and Gemini models"""
         try:
-            self.ocr_model = ocr_predictor(pretrained=True)
-            self.gemini_model = genai.GenerativeModel("gemini-1.5-flash")
-            print("✅ Artist controller initialized successfully")
+            # Initialize OCR model
+            if not self.ocr_model:
+                try:
+                    self.ocr_model = ocr_predictor(pretrained=True)
+                except Exception as e:
+                    print(f"Warning: failed to initialize OCR model: {e}")
+                    self.ocr_model = None
+
+            # Initialize Gemini model only if SDK and API key are available
+            if genai is not None and settings.GEMINI_API_KEY:
+                try:
+                    self.gemini_model = genai.GenerativeModel("gemini-1.5-flash")
+                except Exception as e:
+                    print(f"Warning: failed to initialize Gemini model: {e}")
+                    self.gemini_model = None
+            else:
+                self.gemini_model = None
+
+            print("✅ Artist controller initialized (partial models may be unavailable)")
         except Exception as e:
+            # Do not raise — we want the API to start even if models fail to initialize
             print(f"❌ Failed to initialize models: {e}")
-            raise
+            self.ocr_model = None
+            self.gemini_model = None
     
     async def extract_text(self, file_path: str, dpi: int = 300) -> str:
         """Extract text from PDF, DOCX, or image files - same as original"""
@@ -175,9 +207,13 @@ Please analyze the above text and provide the extracted information in the exact
         try:
             if not self.gemini_model:
                 await self.initialize()
-            
+
+            if not self.gemini_model:
+                # Gemini not available — return helpful error instead of raising
+                return {"error": "Gemini SDK not available or GEMINI_API_KEY not configured"}
+
             prompt = self.create_gemini_prompt(document_text)
-            
+
             response = self.gemini_model.generate_content(prompt)
             content = response.text.strip()
             

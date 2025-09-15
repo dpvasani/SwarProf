@@ -1,0 +1,70 @@
+### Python
+__pycache__/
+*.py[cod]
+*.so
+.Python
+env/
+venv/
+.venv/
+ENV/
+env.bak/
+venv.bak/
+.env
+.env.*
+*.sqlite3
+*.db
+*.pkl
+*.log
+*.pot
+*.pyc
+*.pyo
+*.pyd
+*.mypy_cache/
+.pytest_cache/
+.coverage
+coverage.xml
+htmlcov/
+.vscode/
+
+### Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
+yarn.lock
+.env.local
+.env.development
+.env.test
+.env.production
+
+### OS
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Icon?
+.Spotlight-V100
+.Trashes
+*.swp
+*.swo
+
+### MongoDB
+dump/
+
+### Misc
+*.bak
+*.tmp
+*.orig
+*.rej
+*.sublime-workspace
+*.sublime-project
+*.idea/
+.history/
+.cache/
+.pdm.toml
+.pdm.lock
+
+### Project specific
+src/.env
+Frontend/.env
+Backend/.env
