@@ -59,8 +59,11 @@ const Login = () => {
     try {
       const result = await login(formData.email, formData.password);
       
-      if (result.success) {
+      if (result.success && result.access_token) {
         navigate(from, { replace: true });
+      } else if (result.success && !result.access_token) {
+        // Successful response but no token — treat as error
+        setErrors({ submit: 'Login succeeded but no access token received' });
       } else {
         setErrors({ submit: result.error });
       }

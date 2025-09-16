@@ -23,7 +23,9 @@ export const AuthProvider = ({ children }) => {
         try {
           api.defaults.headers.common['Authorization'] = `Bearer ${storedToken}`;
           const response = await api.get('/auth/profile');
-          setUser(response.data);
+          // Backend wraps payload under data: { ... }
+          const profile = response.data?.data || response.data || null;
+          setUser(profile);
           setToken(storedToken);
         } catch (error) {
           console.error('Auth initialization failed:', error);
@@ -41,15 +43,30 @@ export const AuthProvider = ({ children }) => {
     try {
   // Backend accepts username_or_email and password
   const response = await api.post('/auth/login', { username_or_email: email, password });
-  const { access_token, user: userData } = response.data;
+  // The backend returns { success, message, data: { access_token, token_type, user } }
+  const respData = response.data?.data || response.data;
+  const access_token = respData?.access_token;
+  const userData = respData?.user || null;
+
+      if (access_token) {
+        localStorage.setItem('token', access_token);
+        api.defaults.headers.common['Authorization'] = `Bearer ${access_token}`;
+        setToken(access_token);
+        // If backend didn't include user in login response, fetch profile
+        if (!userData) {
+          try {
+            const profileResp = await api.get('/auth/profile');
+            const profile = profileResp.data?.data || profileResp.data || null;
+            if (profile) setUser(profile);
+          } catch (err) {
+            console.error('Failed to fetch profile after login:', err);
+          }
+        } else {
+          setUser(userData);
+        }
+      }
       
-      localStorage.setItem('token', access_token);
-      api.defaults.headers.common['Authorization'] = `Bearer ${access_token}`;
-      
-      setToken(access_token);
-      setUser(userData);
-      
-      return { success: true };
+  return { success: true, access_token: access_token, user: userData };
     } catch (error) {
       console.error('Login failed:', error);
       return { 
@@ -70,7 +87,8 @@ export const AuthProvider = ({ children }) => {
         role: userData.role || 'user',
       };
       const response = await api.post('/auth/register', payload);
-      return { success: true, data: response.data };
+      const respData = response.data?.data || response.data;
+      return { success: true, data: respData };
     } catch (error) {
       console.error('Registration failed:', error);
       return { 
@@ -90,8 +108,9 @@ export const AuthProvider = ({ children }) => {
   const updateProfile = async (profileData) => {
     try {
   const response = await api.put('/auth/profile', profileData);
-      setUser(response.data);
-      return { success: true, data: response.data };
+      const respData = response.data?.data || response.data;
+      setUser(respData);
+      return { success: true, data: respData };
     } catch (error) {
       console.error('Profile update failed:', error);
       return { 
