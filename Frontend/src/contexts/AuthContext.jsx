@@ -22,7 +22,7 @@ export const AuthProvider = ({ children }) => {
       if (storedToken) {
         try {
           api.defaults.headers.common['Authorization'] = `Bearer ${storedToken}`;
-          const response = await api.get('/users/me');
+          const response = await api.get('/auth/profile');
           setUser(response.data);
           setToken(storedToken);
         } catch (error) {
@@ -39,8 +39,9 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (email, password) => {
     try {
-      const response = await api.post('/users/login', { email, password });
-      const { access_token, user: userData } = response.data;
+  // Backend accepts username_or_email and password
+  const response = await api.post('/auth/login', { username_or_email: email, password });
+  const { access_token, user: userData } = response.data;
       
       localStorage.setItem('token', access_token);
       api.defaults.headers.common['Authorization'] = `Bearer ${access_token}`;
@@ -60,7 +61,15 @@ export const AuthProvider = ({ children }) => {
 
   const register = async (userData) => {
     try {
-      const response = await api.post('/users/register', userData);
+      // Backend expects: username, email, full_name, password (role optional)
+      const payload = {
+        username: userData.username || (userData.email ? userData.email.split('@')[0] : ''),
+        email: userData.email,
+        full_name: userData.full_name,
+        password: userData.password,
+        role: userData.role || 'user',
+      };
+      const response = await api.post('/auth/register', payload);
       return { success: true, data: response.data };
     } catch (error) {
       console.error('Registration failed:', error);
@@ -80,7 +89,7 @@ export const AuthProvider = ({ children }) => {
 
   const updateProfile = async (profileData) => {
     try {
-      const response = await api.put('/users/profile', profileData);
+  const response = await api.put('/auth/profile', profileData);
       setUser(response.data);
       return { success: true, data: response.data };
     } catch (error) {

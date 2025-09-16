@@ -42,10 +42,11 @@ api.interceptors.response.use(
 
 // API endpoints
 export const authAPI = {
-  login: (email, password) => api.post('/users/login', { email, password }),
-  register: (userData) => api.post('/users/register', userData),
-  getProfile: () => api.get('/users/me'),
-  updateProfile: (data) => api.put('/users/profile', data),
+  // Backend routes are mounted under /auth
+  login: (email, password) => api.post('/auth/login', { username_or_email: email, password }),
+  register: (userData) => api.post('/auth/register', userData),
+  getProfile: () => api.get('/auth/profile'),
+  updateProfile: (data) => api.put('/auth/profile', data),
 };
 
 export const artistAPI = {
