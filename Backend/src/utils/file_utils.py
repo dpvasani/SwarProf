@@ -15,10 +15,10 @@ def secure_filename(filename):
     import re
     # Remove path separators and other unsafe characters
     # First, remove any characters that aren't alphanumeric, spaces, dots, underscores, or hyphens
-    filename = re.sub(r'[^A-Za-z0-9\s._-]', '', filename).strip()
+    filename = re.sub(r'[^A-Za-z0-9\s._\-]', '', filename).strip()
     
     # Replace multiple spaces, hyphens, or underscores with a single underscore
-    filename = re.sub(r'[\s_-]+', '_', filename)
+    filename = re.sub(r'[\s_\-]+', '_', filename)
     
     # Remove leading/trailing underscores and ensure we have a valid filename
     filename = filename.strip('_')
