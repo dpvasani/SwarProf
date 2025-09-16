@@ -556,16 +556,11 @@ async def extract_artist_info_endpoint(
         )
     
     try:
-        # Save uploaded file
+        # Save uploaded file using utility (ensures upload folder exists and unique names)
         filename = secure_filename(file.filename)
-        timestamp = datetime.utcnow().strftime("%Y%m%d_%H%M%S")
-        saved_filename = f"{timestamp}_{filename}"
-        file_path = os.path.join(UPLOAD_FOLDER, saved_filename)
-        
-        # Save file to disk
-        with open(file_path, "wb") as buffer:
-            content = await file.read()
-            buffer.write(content)
+        content = await file.read()
+        file_path = save_uploaded_file(content, filename)
+        saved_filename = os.path.basename(file_path)
         
         print(f"Processing file: {filename} (saved as: {saved_filename})")
         
@@ -599,8 +594,8 @@ async def extract_artist_info_endpoint(
             "extracted_text": extracted_text,
             "extraction_status": "completed",
             "created_by": ObjectId(current_user["_id"]),
-            "created_at": datetime.utcnow(),
-            "updated_at": datetime.utcnow()
+            "created_at": datetime.now(__import__('datetime').timezone.utc),
+            "updated_at": datetime.now(__import__('datetime').timezone.utc)
         }
         
         result = await artists_collection.insert_one(artist_doc)

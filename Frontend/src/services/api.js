@@ -3,9 +3,6 @@ import axios from 'axios';
 // Create axios instance with base URL
 export const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL || 'http://localhost:8000',
-  headers: {
-    'Content-Type': 'application/json',
-  },
   timeout: 10000,
 });
 
@@ -50,13 +47,17 @@ export const authAPI = {
 };
 
 export const artistAPI = {
-  extractArtist: (formData) => api.post('/artists/extract', formData, {
-    headers: { 'Content-Type': 'multipart/form-data' },
-  }),
-  getArtists: (params = {}) => api.get('/artists', { params }),
-  getArtist: (id) => api.get(`/artists/${id}`),
-  updateArtist: (id, data) => api.put(`/artists/${id}`, data),
-  deleteArtist: (id) => api.delete(`/artists/${id}`),
+  // Backend artist routes are mounted under the /api prefix
+  // POST /api/extract expects a file upload
+  extractArtist: (formData) => {
+    // Let axios/browser set the multipart Content-Type (including boundary).
+    return api.post('/api/extract', formData);
+  },
+  // Note: don't set Content-Type manually for FormData posts; the browser/axios will set the boundary
+  getArtists: (params = {}) => api.get('/api/artists', { params }),
+  getArtist: (id) => api.get(`/api/artists/${id}`),
+  updateArtist: (id, data) => api.put(`/api/artists/${id}`, data),
+  deleteArtist: (id) => api.delete(`/api/artists/${id}`),
 };
 
 export const uploadAPI = {

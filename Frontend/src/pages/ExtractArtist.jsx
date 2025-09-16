@@ -89,7 +89,10 @@ const ExtractArtist = () => {
             ? { ...f, status: 'error', progress: 0 }
             : f
         ));
-        setError(`Failed to process ${fileItem.file.name}: ${error.response?.data?.detail || error.message}`);
+        // Try to extract useful error information from Axios error
+        const backendDetail = error?.response?.data || error?.response || error?.message || String(error);
+        const detailString = typeof backendDetail === 'object' ? JSON.stringify(backendDetail) : String(backendDetail);
+        setError(`Failed to process ${fileItem.file.name}: ${detailString}`);
       }
     }
 

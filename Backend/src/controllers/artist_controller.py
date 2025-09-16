@@ -262,12 +262,19 @@ Please analyze the above text and provide the extracted information in the exact
         
         try:
             # Save uploaded file using utility
-            content = await file.read()
-            file_path = save_uploaded_file(content, file.filename)
-            filename = file.filename
-            saved_filename = os.path.basename(file_path)
-            
-            print(f"Processing file: {filename} (saved as: {saved_filename})")
+            try:
+                content = await file.read()
+                file_path = save_uploaded_file(content, file.filename)
+                filename = file.filename
+                saved_filename = os.path.basename(file_path)
+                print(f"Processing file: {filename} (saved as: {saved_filename})")
+            except Exception as e:
+                print(f"Error while saving uploaded file: {e}")
+                # Surface a meaningful error to the client
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=f"Error processing file: {str(e)}"
+                )
             
             # Extract text from document
             extracted_text = await self.extract_text(file_path)
