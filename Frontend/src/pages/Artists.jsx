@@ -198,19 +198,19 @@ const Artists = () => {
                 <div className="flex items-center justify-center space-x-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                   <Link
                     to={`/artists/${artist.id}`}
-                    className="p-2 rounded-lg glass hover:bg-white hover:bg-opacity-20 transition-colors duration-300"
+                    className="p-2 rounded-lg glass hover:bg-white/20 transition-colors duration-300"
                     title="View Details"
                   >
                     <Eye className="w-4 h-4 text-white" />
                   </Link>
                   <button
-                    className="p-2 rounded-lg glass hover:bg-white hover:bg-opacity-20 transition-colors duration-300"
+                    className="p-2 rounded-lg glass hover:bg-white/20 transition-colors duration-300"
                     title="Edit Artist"
                   >
                     <Edit className="w-4 h-4 text-white" />
                   </button>
                   <button
-                    className="p-2 rounded-lg glass hover:bg-red-500 hover:bg-opacity-20 transition-colors duration-300"
+                    className="p-2 rounded-lg glass hover:bg-red-500/20 transition-colors duration-300"
                     title="Delete Artist"
                   >
                     <Trash2 className="w-4 h-4 text-red-400" />
@@ -283,7 +283,7 @@ const Artists = () => {
                     className={`w-10 h-10 rounded-lg transition-all duration-300 ${
                       currentPage === pageNum
                         ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white'
-                        : 'glass text-white text-opacity-60 hover:text-white hover:bg-white hover:bg-opacity-10'
+                        : 'glass text-white text-opacity-60 hover:text-white hover:bg-white/10'
                     }`}
                   >
                     {pageNum}

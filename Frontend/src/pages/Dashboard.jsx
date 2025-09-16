@@ -230,10 +230,10 @@ const Dashboard = () => {
                   <div className="text-right">
                     <p className="text-white text-opacity-60 text-sm">{extraction.date}</p>
                     <div className="flex items-center space-x-2 mt-1">
-                      <button className="p-1 hover:bg-white hover:bg-opacity-10 rounded transition-colors duration-300">
+                      <button className="p-1 hover:bg-white/10 rounded transition-colors duration-300">
                         <Eye className="w-4 h-4 text-white text-opacity-60" />
                       </button>
-                      <button className="p-1 hover:bg-white hover:bg-opacity-10 rounded transition-colors duration-300">
+                      <button className="p-1 hover:bg-white/10 rounded transition-colors duration-300">
                         <Download className="w-4 h-4 text-white text-opacity-60" />
                       </button>
                     </div>
@@ -266,7 +266,7 @@ const Dashboard = () => {
                   <Link
                     key={artist.id}
                     to={`/artists/${artist.id}`}
-                    className="flex items-center space-x-3 p-4 rounded-lg glass hover:bg-white hover:bg-opacity-10 transition-all duration-300"
+                    className="flex items-center space-x-3 p-4 rounded-lg glass hover:bg-white/10 transition-all duration-300"
                   >
                     <div className="w-12 h-12 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 flex items-center justify-center">
                       <span className="text-white font-semibold">

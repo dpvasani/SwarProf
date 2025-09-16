@@ -146,7 +146,7 @@ const ArtistDetail = () => {
                   <h2 className="text-xl font-semibold text-white">Biography</h2>
                   <button
                     onClick={() => copyToClipboard(artist.bio)}
-                    className="p-2 hover:bg-white hover:bg-opacity-10 rounded-lg transition-colors duration-300"
+                    className="p-2 hover:bg-white/10 rounded-lg transition-colors duration-300"
                     title="Copy biography"
                   >
                     <Copy className="w-4 h-4 text-white text-opacity-60" />
@@ -256,7 +256,7 @@ const ArtistDetail = () => {
                             href={work.url}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="p-2 hover:bg-white hover:bg-opacity-10 rounded-lg transition-colors duration-300"
+                            className="p-2 hover:bg-white/10 rounded-lg transition-colors duration-300"
                           >
                             <ExternalLink className="w-4 h-4 text-white text-opacity-60" />
                           </a>

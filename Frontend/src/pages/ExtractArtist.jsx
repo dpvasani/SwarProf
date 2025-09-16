@@ -240,7 +240,7 @@ const ExtractArtist = () => {
                       {fileItem.status === 'pending' && (
                         <button
                           onClick={() => removeFile(fileItem.id)}
-                          className="p-1 hover:bg-white hover:bg-opacity-10 rounded transition-colors duration-300"
+                          className="p-1 hover:bg-white/10 rounded transition-colors duration-300"
                         >
                           <X className="w-5 h-5 text-white text-opacity-60" />
                         </button>

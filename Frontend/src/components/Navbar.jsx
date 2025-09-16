@@ -68,10 +68,10 @@ const Navbar = () => {
                   key={item.path}
                   to={item.path}
                   className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-all duration-300 ${
-                    isActive
-                      ? 'bg-white bg-opacity-20 text-white shadow-glow'
-                      : 'text-white text-opacity-80 hover:bg-white hover:bg-opacity-10 hover:text-white'
-                  }`}
+                      isActive
+                        ? 'bg-white/20 text-white shadow-glow'
+                        : 'text-white text-opacity-80 hover:bg-white/10 hover:text-white'
+                    }`}
                 >
                   <Icon className="w-4 h-4" />
                   <span className="font-medium">{item.label}</span>
@@ -103,7 +103,7 @@ const Navbar = () => {
                       <button
                         key={item.label}
                         onClick={item.action ? item.action : () => navigate(item.path)}
-                        className="w-full flex items-center space-x-2 px-4 py-3 text-white text-opacity-80 hover:text-white hover:bg-white hover:bg-opacity-10 transition-all duration-300 first:rounded-t-lg last:rounded-b-lg"
+                        className="w-full flex items-center space-x-2 px-4 py-3 text-white text-opacity-80 hover:bg-white/10 hover:text-white transition-all duration-300 first:rounded-t-lg last:rounded-b-lg"
                       >
                         <Icon className="w-4 h-4" />
                         <span>{item.label}</span>
@@ -169,8 +169,8 @@ const Navbar = () => {
                     onClick={() => setIsMenuOpen(false)}
                     className={`flex items-center space-x-3 px-4 py-3 rounded-lg transition-all duration-300 ${
                       isActive
-                        ? 'bg-white bg-opacity-20 text-white'
-                        : 'text-white text-opacity-80 hover:bg-white hover:bg-opacity-10 hover:text-white'
+              ? 'bg-white/20 text-white'
+                : 'text-white text-opacity-80 hover:bg-white/10 hover:text-white'
                     }`}
                   >
                     <Icon className="w-5 h-5" />
@@ -194,7 +194,7 @@ const Navbar = () => {
                             setIsMenuOpen(false);
                           }
                         }}
-                        className="w-full flex items-center space-x-3 px-4 py-3 text-white text-opacity-80 hover:text-white hover:bg-white hover:bg-opacity-10 transition-all duration-300 rounded-lg"
+                        className="w-full flex items-center space-x-3 px-4 py-3 text-white text-opacity-80 hover:bg-white/10 hover:text-white transition-all duration-300 rounded-lg"
                       >
                         <Icon className="w-5 h-5" />
                         <span>{item.label}</span>
@@ -207,7 +207,7 @@ const Navbar = () => {
                   <Link
                     to="/login"
                     onClick={() => setIsMenuOpen(false)}
-                    className="block px-4 py-3 text-white text-opacity-80 hover:text-white hover:bg-white hover:bg-opacity-10 transition-all duration-300 rounded-lg"
+                    className="block px-4 py-3 text-white text-opacity-80 hover:bg-white/10 hover:text-white transition-all duration-300 rounded-lg"
                   >
                     Login
                   </Link>

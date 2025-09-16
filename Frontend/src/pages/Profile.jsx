@@ -265,7 +265,7 @@ const Profile = () => {
                         key={itemIndex}
                         onClick={item.action}
                         disabled={item.disabled}
-                        className="w-full flex items-center justify-between p-3 rounded-lg glass hover:bg-white hover:bg-opacity-10 transition-colors duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="w-full flex items-center justify-between p-3 rounded-lg glass hover:bg-white/10 transition-colors duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         <span className="text-white">{item.label}</span>
                         {item.disabled && (

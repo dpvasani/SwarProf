@@ -164,7 +164,7 @@ const Register = () => {
                 Full Name
               </label>
               <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <div className="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none">
                   <User className="w-5 h-5 text-white text-opacity-40" />
                 </div>
                 <input
@@ -173,7 +173,7 @@ const Register = () => {
                   name="full_name"
                   value={formData.full_name}
                   onChange={handleChange}
-                  className={`glass-input w-full pl-10 ${errors.full_name ? 'border-red-500 border-opacity-50' : ''}`}
+                  className={`glass-input w-full pl-14 ${errors.full_name ? 'border-red-500 border-opacity-50' : ''}`}
                   placeholder="Enter your full name"
                   disabled={isLoading}
                 />
@@ -189,7 +189,7 @@ const Register = () => {
                 Email Address
               </label>
               <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <div className="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none">
                   <Mail className="w-5 h-5 text-white text-opacity-40" />
                 </div>
                 <input
@@ -198,7 +198,7 @@ const Register = () => {
                   name="email"
                   value={formData.email}
                   onChange={handleChange}
-                  className={`glass-input w-full pl-10 ${errors.email ? 'border-red-500 border-opacity-50' : ''}`}
+                  className={`glass-input w-full pl-14 ${errors.email ? 'border-red-500 border-opacity-50' : ''}`}
                   placeholder="Enter your email"
                   disabled={isLoading}
                 />
@@ -214,7 +214,7 @@ const Register = () => {
                 Password
               </label>
               <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <div className="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none">
                   <Lock className="w-5 h-5 text-white text-opacity-40" />
                 </div>
                 <input
@@ -223,7 +223,7 @@ const Register = () => {
                   name="password"
                   value={formData.password}
                   onChange={handleChange}
-                  className={`glass-input w-full pl-10 pr-10 ${errors.password ? 'border-red-500 border-opacity-50' : ''}`}
+                  className={`glass-input w-full pl-14 pr-10 ${errors.password ? 'border-red-500 border-opacity-50' : ''}`}
                   placeholder="Create a password"
                   disabled={isLoading}
                 />
@@ -251,7 +251,7 @@ const Register = () => {
                 Confirm Password
               </label>
               <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <div className="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none">
                   <Lock className="w-5 h-5 text-white text-opacity-40" />
                 </div>
                 <input
@@ -260,7 +260,7 @@ const Register = () => {
                   name="confirmPassword"
                   value={formData.confirmPassword}
                   onChange={handleChange}
-                  className={`glass-input w-full pl-10 pr-10 ${errors.confirmPassword ? 'border-red-500 border-opacity-50' : ''}`}
+                  className={`glass-input w-full pl-14 pr-10 ${errors.confirmPassword ? 'border-red-500 border-opacity-50' : ''}`}
                   placeholder="Confirm your password"
                   disabled={isLoading}
                 />
