@@ -176,14 +176,14 @@ const Login = () => {
               disabled={isLoading}
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
-              className="w-full glass-button bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
+              className="w-full glass-button bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
             >
               {isLoading ? (
                 <LoadingSpinner size="sm" />
               ) : (
                 <>
-                  <LogIn className="w-5 h-5" />
-                  <span>Sign In</span>
+                  <LogIn className="w-5 h-5 mr-2 self-center align-middle" />
+                  <span className="self-center">Sign In</span>
                 </>
               )}
             </motion.button>
