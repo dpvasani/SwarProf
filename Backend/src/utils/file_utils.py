@@ -14,15 +14,19 @@ def secure_filename(filename):
     """Secure a filename by removing unsafe characters"""
     import re
     # Remove path separators and other unsafe characters
-    # Use a safe character class: allow word chars, whitespace, dot and hyphen
-    try:
-        # Keep it simple and clear: allow letters, numbers, underscore, whitespace, dot and hyphen
-        filename = re.sub(r'[^A-Za-z0-9_\s.\-]', '', filename).strip()
-    except re.error:
-        # Fallback: remove anything that's not alphanumeric, dot, underscore or hyphen
-        filename = re.sub(r'[^A-Za-z0-9._\- ]', '', filename).strip()
-    # Replace spaces and multiple separators with underscores
-    filename = re.sub(r'[\s\-]+', '_', filename)
+    # First, remove any characters that aren't alphanumeric, spaces, dots, underscores, or hyphens
+    filename = re.sub(r'[^A-Za-z0-9\s._-]', '', filename).strip()
+    
+    # Replace multiple spaces, hyphens, or underscores with a single underscore
+    filename = re.sub(r'[\s_-]+', '_', filename)
+    
+    # Remove leading/trailing underscores and ensure we have a valid filename
+    filename = filename.strip('_')
+    
+    # If filename is empty or too short, provide a fallback
+    if not filename or len(filename) < 1:
+        filename = 'unnamed_file'
+    
     return filename
 
 def ensure_upload_directory():
