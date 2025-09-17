@@ -63,3 +63,14 @@ async def get_result(
 ):
     """Get a specific extraction result"""
     return await artist_controller.get_result(result_id, current_user)
+
+@router.post("/artists/{artist_id}/enhance")
+async def enhance_artist_contact_details(
+    artist_id: str,
+    current_user: Dict[str, Any] = Depends(get_current_user)
+):
+    """
+    Enhance existing artist data by finding missing contact details and social media information
+    This endpoint re-processes the artist data through AI to find missing contact information
+    """
+    return await artist_controller.enhance_artist_contact_details(artist_id, current_user)

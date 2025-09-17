@@ -14,12 +14,20 @@ class SocialMedia(BaseModel):
     facebook: Optional[str] = None
     twitter: Optional[str] = None
     youtube: Optional[str] = None
+    linkedin: Optional[str] = None
+    spotify: Optional[str] = None
+    tiktok: Optional[str] = None
+    snapchat: Optional[str] = None
+    discord: Optional[str] = None
     other: Optional[str] = None
 
 class ContactInfo(BaseModel):
+    phone_numbers: Optional[List[str]] = []  # Support multiple phone numbers
+    emails: Optional[List[str]] = []  # Support multiple email addresses
+    website: Optional[str] = None
+    # Backward compatibility
     phone: Optional[str] = None
     email: Optional[str] = None
-    website: Optional[str] = None
 
 class Address(BaseModel):
     full_address: Optional[str] = None

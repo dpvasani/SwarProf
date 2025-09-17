@@ -132,20 +132,27 @@ You are an expert information extraction specialist. Please extract detailed inf
   "contact_details": {{
     "social_media": {{
       "instagram": "Instagram handle/URL or null",
-      "facebook": "Facebook profile or null", 
-      "twitter": "Twitter handle or null",
-      "youtube": "YouTube channel or null",
-      "other": "Other social media or null"
+      "facebook": "Facebook profile/URL or null", 
+      "twitter": "Twitter handle/URL or null",
+      "youtube": "YouTube channel/URL or null",
+      "linkedin": "LinkedIn profile/URL or null",
+      "spotify": "Spotify artist profile/URL or null",
+      "tiktok": "TikTok handle/URL or null",
+      "snapchat": "Snapchat handle or null",
+      "discord": "Discord handle or null",
+      "other": "Any other social media links or null"
     }},
     "contact_info": {{
-      "phone": "Phone number or null",
-      "email": "Email address or null",
-      "website": "Website or null"
+      "phone_numbers": ["Phone number 1", "Phone number 2"] or null,
+      "emails": ["email1@example.com", "email2@example.com"] or null,
+      "website": "Website URL or null",
+      "phone": "Primary phone number or null",
+      "email": "Primary email address or null"
     }},
     "address": {{
-      "full_address": "Complete address or null",
+      "full_address": "Complete postal address or null",
       "city": "City or null",
-      "state": "State or null",
+      "state": "State/Province or null",
       "country": "Country or null"
     }}
   }},
@@ -157,10 +164,15 @@ You are an expert information extraction specialist. Please extract detailed inf
 
 ## Guidelines:
 - Only extract explicitly mentioned information
-- Use null for missing information
+- Use null for missing information - DO NOT make up contact details
 - Handle OCR errors intelligently
 - Focus on accuracy over completeness
 - Generate a factual summary based only on extracted data
+- For contact details: Look for phone numbers, email addresses, social media handles, websites
+- For social media: Extract handles, usernames, or full URLs for platforms like Instagram, Facebook, Twitter, YouTube, LinkedIn, Spotify, TikTok, etc.
+- For addresses: Extract any postal addresses, cities, states, countries mentioned
+- If information is not found in the document, set the corresponding field to null
+- When sending this data to Gemini for enhancement, it should attempt to find missing contact details if they exist in online sources, but if still not found, keep as null
 
 ## Document Text to Analyze:
 

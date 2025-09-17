@@ -207,20 +207,27 @@ Please extract and format the following information as JSON:
   "contact_details": {{
     "social_media": {{
       "instagram": "Instagram handle/URL or null",
-      "facebook": "Facebook profile or null",
-      "twitter": "Twitter handle or null",
-      "youtube": "YouTube channel or null",
-      "other": "Other social media or null"
+      "facebook": "Facebook profile/URL or null",
+      "twitter": "Twitter handle/URL or null",
+      "youtube": "YouTube channel/URL or null",
+      "linkedin": "LinkedIn profile/URL or null",
+      "spotify": "Spotify artist profile/URL or null",
+      "tiktok": "TikTok handle/URL or null",
+      "snapchat": "Snapchat handle or null",
+      "discord": "Discord handle or null",
+      "other": "Any other social media links or null"
     }},
     "contact_info": {{
-      "phone": "Phone number or null",
-      "email": "Email address or null",
-      "website": "Website or null"
+      "phone_numbers": ["Phone number 1", "Phone number 2"] or null,
+      "emails": ["email1@example.com", "email2@example.com"] or null,
+      "website": "Website URL or null",
+      "phone": "Primary phone number or null",
+      "email": "Primary email address or null"
     }},
     "address": {{
-      "full_address": "Complete address or null",
+      "full_address": "Complete postal address or null",
       "city": "City or null",
-      "state": "State or null",
+      "state": "State/Province or null",
       "country": "Country or null"
     }}
   }},
@@ -236,6 +243,12 @@ Please extract and format the following information as JSON:
 - Use null for information not found in the document
 - Be accurate and factual
 - Generate a comprehensive summary based on available information
+- For contact details: Extract all phone numbers, email addresses, social media handles, websites
+- For social media: Look for Instagram, Facebook, Twitter, YouTube, LinkedIn, Spotify, TikTok handles or URLs
+- For addresses: Extract any postal addresses, cities, states, countries mentioned
+- If contact information is not found in the document, set the corresponding field to null
+- When enhancing artist data, try to find missing contact details from reliable online sources
+- If information still cannot be found after enhancement, keep fields as null
 
 Please analyze the document and provide the extracted information in the exact JSON format specified.
 """
@@ -297,16 +310,144 @@ Please analyze the document and provide the extracted information in the exact J
             return self.create_fallback_data(artist_name, document_text)
     
     def create_fallback_data(self, artist_name: str, document_text: str) -> dict:
-        """Create fallback data when AI fails"""
+        """Create fallback data when AI fails - now with enhanced contact extraction"""
         print(f"🔄 Creating fallback data for: '{artist_name}'")
         
         # Simple text analysis
         text_lower = document_text.lower()
         lines = document_text.split('\n')
         
+        # Extract contact information using pattern matching
+        contact_details = self._extract_contact_details_from_text(document_text)
+        
         # Extract guru names
+        guru_name = self._extract_guru_name(lines)
+        
+        # Extract gharana
+        gharana_name = self._extract_gharana_name(lines, text_lower)
+        
+        # Extract achievements
+        achievements = self._extract_achievements(lines)
+        
+        # Create summary from first few sentences
+        sentences = document_text.replace('\n', ' ').split('.')
+        summary = '. '.join(sentences[:3]).strip() + '.' if sentences else f"Information about {artist_name}"
+        
+        # Determine style and tradition
+        style = "Indian Classical" if "classical" in text_lower else None
+        tradition = "Indian Classical Music" if "classical" in text_lower else None
+        
+        return {
+            "artist_name": artist_name,  # GUARANTEED
+            "guru_name": guru_name,
+            "gharana_details": {
+                "gharana_name": gharana_name,
+                "style": style,
+                "tradition": tradition
+            } if gharana_name else None,
+            "biography": {
+                "early_life": None,
+                "background": summary,
+                "education": None,
+                "career_highlights": None
+            },
+            "achievements": achievements,
+            "contact_details": contact_details,
+            "summary": summary,
+            "extraction_confidence": "medium",
+            "additional_notes": "Extracted using fallback method with pattern matching"
+        }
+    
+    def _extract_contact_details_from_text(self, text: str) -> dict:
+        """Extract contact details using pattern matching"""
+        import re
+        
+        # Phone number patterns
+        phone_patterns = [
+            r'(?:\+?91[-.\s]?)?[6-9]\d{9}',  # Indian mobile
+            r'(?:\+?1[-.\s]?)?[2-9]\d{2}[-.\s]?\d{3}[-.\s]?\d{4}',  # US phone
+            r'(?:\+?\d{1,3}[-.\s]?)?\(?\d{3,4}\)?[-.\s]?\d{3,4}[-.\s]?\d{3,4}'  # General
+        ]
+        
+        # Email patterns
+        email_pattern = r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b'
+        
+        # Social media patterns
+        social_patterns = {
+            'instagram': r'(?:instagram\.com/|@)([a-zA-Z0-9_.]+)',
+            'facebook': r'facebook\.com/([a-zA-Z0-9.]+)',
+            'twitter': r'(?:twitter\.com/|@)([a-zA-Z0-9_]+)',
+            'youtube': r'youtube\.com/(?:channel/|user/|c/)?([a-zA-Z0-9_-]+)',
+            'linkedin': r'linkedin\.com/in/([a-zA-Z0-9-]+)',
+            'spotify': r'spotify\.com/artist/([a-zA-Z0-9]+)',
+            'tiktok': r'tiktok\.com/@([a-zA-Z0-9_.]+)'
+        }
+        
+        # Website patterns
+        website_pattern = r'(?:https?://)?(?:www\.)?([a-zA-Z0-9-]+\.[a-zA-Z]{2,}(?:/[^\s]*)?)'
+        
+        # Extract phone numbers
+        phone_numbers = []
+        for pattern in phone_patterns:
+            matches = re.findall(pattern, text)
+            phone_numbers.extend(matches)
+        
+        # Extract emails
+        emails = re.findall(email_pattern, text)
+        
+        # Extract social media
+        social_media = {}
+        for platform, pattern in social_patterns.items():
+            matches = re.findall(pattern, text, re.IGNORECASE)
+            if matches:
+                social_media[platform] = matches[0]
+            else:
+                social_media[platform] = None
+        
+        # Extract websites (exclude social media URLs)
+        websites = re.findall(website_pattern, text, re.IGNORECASE)
+        website = None
+        if websites:
+            # Filter out social media websites
+            social_domains = ['instagram.com', 'facebook.com', 'twitter.com', 'youtube.com', 'linkedin.com', 'spotify.com', 'tiktok.com']
+            for site in websites:
+                if not any(domain in site.lower() for domain in social_domains):
+                    website = site if site.startswith('http') else f"https://{site}"
+                    break
+        
+        # Extract address information
+        address_keywords = ['address', 'located at', 'based in', 'residing in']
+        address_info = None
+        for line in text.split('\n'):
+            line_lower = line.lower()
+            for keyword in address_keywords:
+                if keyword in line_lower:
+                    address_info = line.strip()
+                    break
+            if address_info:
+                break
+        
+        return {
+            "social_media": social_media,
+            "contact_info": {
+                "phone_numbers": phone_numbers if phone_numbers else None,
+                "emails": emails if emails else None,
+                "website": website,
+                "phone": phone_numbers[0] if phone_numbers else None,
+                "email": emails[0] if emails else None
+            },
+            "address": {
+                "full_address": address_info,
+                "city": None,
+                "state": None,
+                "country": None
+            } if address_info else None
+        }
+    
+    def _extract_guru_name(self, lines: list) -> str:
+        """Extract guru name from text lines"""
         guru_name = None
-        guru_keywords = ['guru', 'teacher', 'ustad', 'pandit', 'under', 'trained with']
+        guru_keywords = ['guru', 'teacher', 'ustad', 'pandit', 'under', 'trained with', 'student of']
         for line in lines:
             line_lower = line.lower()
             for keyword in guru_keywords:
@@ -323,8 +464,10 @@ Please analyze the document and provide the extracted information in the exact J
                         break
             if guru_name:
                 break
-        
-        # Extract gharana
+        return guru_name
+    
+    def _extract_gharana_name(self, lines: list, text_lower: str) -> str:
+        """Extract gharana name from text"""
         gharana_name = None
         if 'gharana' in text_lower:
             for line in lines:
@@ -335,10 +478,12 @@ Please analyze the document and provide the extracted information in the exact J
                             gharana_name = words[i-1]
                             break
                     break
-        
-        # Extract achievements
+        return gharana_name
+    
+    def _extract_achievements(self, lines: list) -> list:
+        """Extract achievements from text lines"""
         achievements = []
-        achievement_keywords = ['award', 'conferred', 'recognition', 'performed', 'festival']
+        achievement_keywords = ['award', 'conferred', 'recognition', 'performed', 'festival', 'honor', 'prize', 'achievement']
         for line in lines:
             line_lower = line.lower()
             for keyword in achievement_keywords:
@@ -350,31 +495,7 @@ Please analyze the document and provide the extracted information in the exact J
                         "details": None
                     })
                     break
-        
-        # Create summary from first few sentences
-        sentences = document_text.replace('\n', ' ').split('.')
-        summary = '. '.join(sentences[:3]).strip() + '.' if sentences else f"Information about {artist_name}"
-        
-        return {
-            "artist_name": artist_name,  # GUARANTEED
-            "guru_name": guru_name,
-            "gharana_details": {
-                "gharana_name": gharana_name,
-                "style": "Indian Classical" if "classical" in text_lower else None,
-                "tradition": "Indian Classical Music" if "classical" in text_lower else None
-            } if gharana_name else None,
-            "biography": {
-                "early_life": None,
-                "background": summary,
-                "education": None,
-                "career_highlights": None
-            },
-            "achievements": achievements,
-            "contact_details": None,
-            "summary": summary,
-            "extraction_confidence": "medium",
-            "additional_notes": "Extracted using fallback method"
-        }
+        return achievements
     
     async def extract_artist_info(self, file: UploadFile, current_user: Dict[str, Any]) -> Dict[str, Any]:
         """
@@ -601,6 +722,224 @@ Please analyze the document and provide the extracted information in the exact J
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST, 
                 detail=f"Invalid result ID: {str(e)}"
+            )
+
+    def create_enhancement_only_prompt(self, artist_name: str, existing_data: dict, document_text: str = "") -> str:
+        """Create prompt for enhancing existing artist data with missing contact details"""
+        prompt_template = """
+# Artist Contact Details Enhancement Task
+
+You are an expert information extraction and enhancement specialist. You have existing artist information, and you need to find missing contact details and social media information.
+
+## Artist Name: {artist_name}
+
+## Existing Artist Data:
+{existing_data}
+
+## Original Document Text (if available):
+{document_text}
+
+## Enhancement Instructions:
+
+1. **Primary Task**: Find missing contact details and social media information for the artist
+2. **Keep Existing Data**: Do not modify any existing non-null information
+3. **Fill Missing Fields**: Only populate fields that are currently null or empty
+4. **Use Reliable Sources**: When enhancing, use knowledge from reliable sources about this artist
+5. **Maintain Accuracy**: Only add information you are confident about
+6. **Set Null if Not Found**: If information cannot be found, leave as null
+
+## Required Enhancement Focus:
+
+### Contact Details to Find:
+- **Phone Numbers**: Any contact phone numbers
+- **Email Addresses**: Contact email addresses  
+- **Postal Address**: Physical address, city, state, country
+- **Website**: Official website or personal website
+
+### Social Media to Find:
+- **Instagram**: Handle or profile URL
+- **Facebook**: Profile or page URL
+- **Twitter/X**: Handle or profile URL
+- **YouTube**: Channel URL
+- **LinkedIn**: Profile URL
+- **Spotify**: Artist profile URL
+- **TikTok**: Handle or profile URL
+- **Other Platforms**: Any other social media presence
+
+## Output Format (JSON):
+
+```json
+{{
+  "artist_name": "{artist_name}",
+  "guru_name": "Keep existing or enhance if null",
+  "gharana_details": {{
+    "gharana_name": "Keep existing or enhance if null",
+    "style": "Keep existing or enhance if null",
+    "tradition": "Keep existing or enhance if null"
+  }},
+  "biography": {{
+    "early_life": "Keep existing or enhance if null",
+    "background": "Keep existing or enhance if null",
+    "education": "Keep existing or enhance if null",
+    "career_highlights": "Keep existing or enhance if null"
+  }},
+  "achievements": "Keep existing array or enhance if empty",
+  "contact_details": {{
+    "social_media": {{
+      "instagram": "Instagram handle/URL or null",
+      "facebook": "Facebook profile/URL or null",
+      "twitter": "Twitter handle/URL or null",
+      "youtube": "YouTube channel/URL or null",
+      "linkedin": "LinkedIn profile/URL or null",
+      "spotify": "Spotify artist profile/URL or null",
+      "tiktok": "TikTok handle/URL or null",
+      "snapchat": "Snapchat handle or null",
+      "discord": "Discord handle or null",
+      "other": "Any other social media links or null"
+    }},
+    "contact_info": {{
+      "phone_numbers": ["Phone number 1", "Phone number 2"] or null,
+      "emails": ["email1@example.com", "email2@example.com"] or null,
+      "website": "Website URL or null",
+      "phone": "Primary phone number or null",
+      "email": "Primary email address or null"
+    }},
+    "address": {{
+      "full_address": "Complete postal address or null",
+      "city": "City or null",
+      "state": "State/Province or null",
+      "country": "Country or null"
+    }}
+  }},
+  "summary": "Keep existing or enhance if missing",
+  "extraction_confidence": "high/medium/low",
+  "additional_notes": "Enhancement notes and sources used"
+}}
+```
+
+## Guidelines:
+- ALWAYS preserve existing non-null data
+- Only enhance fields that are null, empty, or missing
+- Focus heavily on finding contact details and social media
+- Use reliable knowledge about the artist if confident
+- Set fields to null if information cannot be found reliably
+- Provide enhancement notes about what was added
+
+Please enhance the artist data by finding missing contact details and social media information.
+"""
+        return prompt_template.format(
+            artist_name=artist_name,
+            existing_data=json.dumps(existing_data, indent=2),
+            document_text=document_text[:1000] + "..." if len(document_text) > 1000 else document_text
+        )
+
+    async def enhance_artist_contact_details(self, artist_id: str, current_user: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Enhance existing artist data by finding missing contact details and social media information
+        """
+        try:
+            print(f"🔍 STARTING ARTIST ENHANCEMENT for ID: {artist_id}")
+            print("=" * 60)
+            
+            # Get existing artist data
+            artist_doc = await artist_model.find_by_id(artist_id)
+            if not artist_doc:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail="Artist not found"
+                )
+            
+            # Extract existing data
+            existing_artist_info = artist_doc.get("artist_info", {})
+            artist_name = existing_artist_info.get("artist_name", "Unknown Artist")
+            original_text = artist_doc.get("extracted_text", "")
+            
+            print(f"🎯 Artist: {artist_name}")
+            print(f"📝 Original text length: {len(original_text)}")
+            
+            # Check if Gemini is available
+            if self.gemini_model is None:
+                if genai is not None and settings.GEMINI_API_KEY:
+                    self.gemini_model = genai.GenerativeModel("gemini-1.5-flash")
+                else:
+                    raise HTTPException(
+                        status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                        detail="AI enhancement service not available"
+                    )
+            
+            # Create enhancement prompt
+            prompt = self.create_enhancement_only_prompt(artist_name, existing_artist_info, original_text)
+            
+            print("🤖 Sending to Gemini for contact details enhancement...")
+            response = self.gemini_model.generate_content(prompt)
+            content = response.text.strip()
+            
+            # Parse JSON response
+            json_str = content
+            if "```json" in content:
+                json_match = re.search(r'```json\s*\n(.*?)\n```', content, re.DOTALL)
+                if json_match:
+                    json_str = json_match.group(1)
+                else:
+                    start = content.find('{')
+                    end = content.rfind('}') + 1
+                    json_str = content[start:end] if start != -1 and end > start else content
+            else:
+                start = content.find('{')
+                end = content.rfind('}') + 1
+                json_str = content[start:end] if start != -1 and end > start else content
+            
+            enhanced_data = json.loads(json_str)
+            
+            # Validate enhanced data with Pydantic
+            try:
+                enhanced_artist_info = ArtistInfo(**enhanced_data)
+                print("✅ Enhanced data validation successful")
+            except Exception as e:
+                print(f"⚠️ Enhanced data validation error: {e}")
+                # Keep original data if validation fails
+                enhanced_artist_info = ArtistInfo(**existing_artist_info)
+            
+            # Update the artist document
+            update_data = {
+                "artist_info": enhanced_artist_info.dict(),
+                "enhancement_status": "enhanced",
+                "enhanced_at": datetime.utcnow()
+            }
+            
+            success = await artist_model.update_artist(artist_id, update_data)
+            
+            if success:
+                print("✅ Artist data enhanced and saved successfully!")
+                print("🎉 ENHANCEMENT COMPLETED!")
+                print("=" * 60)
+                
+                return {
+                    "success": True,
+                    "artist_id": artist_id,
+                    "artist_name": artist_name,
+                    "enhanced_data": enhanced_artist_info.dict(),
+                    "message": "Artist contact details enhanced successfully"
+                }
+            else:
+                raise HTTPException(
+                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                    detail="Failed to save enhanced data"
+                )
+                
+        except json.JSONDecodeError as e:
+            print(f"⚠️ JSON parsing error during enhancement: {e}")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Failed to parse AI response"
+            )
+        except HTTPException:
+            raise
+        except Exception as e:
+            print(f"❌ Enhancement error: {str(e)}")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"Error enhancing artist data: {str(e)}"
             )
 
 # Create global instance
