@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """
-Artist controller - converted from Flask to FastAPI
-Maintains the same accuracy as the original Flask implementation
+Artist controller - FastAPI implementation with working Flask workflow
+Converted from Flask to FastAPI while maintaining exact same functionality
+Includes filename-based fallback to guarantee artist_name is never null
 """
 
 import os
@@ -50,33 +51,77 @@ class ArtistController:
     async def initialize(self):
         """Initialize OCR and Gemini models"""
         try:
-            # Initialize OCR model
-            if not self.ocr_model:
-                try:
-                    self.ocr_model = ocr_predictor(pretrained=True)
-                except Exception as e:
-                    print(f"Warning: failed to initialize OCR model: {e}")
-                    self.ocr_model = None
-
-            # Initialize Gemini model only if SDK and API key are available
+            print("🚀 Initializing ArtistController...")
+            
+            # Initialize OCR model  
+            print("📖 Loading OCR model...")
+            self.ocr_model = ocr_predictor(pretrained=True)
+            print("✅ OCR model loaded successfully")
+            
+            # Initialize Gemini model (if available)
             if genai is not None and settings.GEMINI_API_KEY:
                 try:
-                    self.gemini_model = genai.GenerativeModel("gemini-1.5-flash")
+                    self.gemini_model = genai.GenerativeModel('gemini-1.5-flash')
+                    print("✅ Gemini model initialized successfully")
                 except Exception as e:
-                    print(f"Warning: failed to initialize Gemini model: {e}")
+                    print(f"⚠️ Gemini model initialization failed: {e}")
                     self.gemini_model = None
             else:
                 self.gemini_model = None
-
-            print("✅ Artist controller initialized (partial models may be unavailable)")
+                print("⚠️ Gemini model not available")
+            
+            print("✅ ArtistController initialized successfully")
+            
         except Exception as e:
-            # Do not raise — we want the API to start even if models fail to initialize
-            print(f"❌ Failed to initialize models: {e}")
-            self.ocr_model = None
-            self.gemini_model = None
+            print(f"❌ ArtistController initialization failed: {e}")
+    
+    def extract_artist_name_from_filename(self, filename: str) -> str:
+        """
+        Extract artist name from filename as fallback
+        This ensures artist_name is never null
+        """
+        try:
+            print(f"🔄 Extracting artist name from filename '{filename}'")
+            
+            # Remove file extension
+            name = Path(filename).stem
+            
+            # Remove timestamp prefix if present (format: YYYYMMDD_HHMMSS_)
+            name = re.sub(r'^\d{8}_\d{6}_', '', name)
+            
+            # Replace underscores and hyphens with spaces
+            name = name.replace('_', ' ').replace('-', ' ')
+            
+            # Remove common file prefixes/suffixes
+            name = re.sub(r'^(copy|scan|img|image|doc|document)(\s+of)?\s*', '', name, flags=re.IGNORECASE)
+            name = re.sub(r'\s+(copy|scan|img|image|doc|document)$', '', name, flags=re.IGNORECASE)
+            
+            # Remove numbers at the start/end that might be page numbers
+            name = re.sub(r'^\d+\s*', '', name)
+            name = re.sub(r'\s*\d+$', '', name)
+            
+            # Title case the name
+            name = name.title()
+            
+            # Clean up extra spaces
+            name = ' '.join(name.split())
+            
+            # Ensure we have a valid name
+            if not name or len(name.strip()) < 2:
+                name = "Unknown Artist"
+            
+            print(f"✅ Artist name extracted from filename: '{name}'")
+            return name
+            
+        except Exception as e:
+            print(f"❌ Error extracting artist name from filename: {e}")
+            return "Unknown Artist"
     
     async def extract_text(self, file_path: str, dpi: int = 300) -> str:
-        """Extract text from PDF, DOCX, or image files - same as original"""
+        """
+        Extract text from PDF, DOCX, or image files
+        Based on the working code from the Flask implementation
+        """
         print(f"Attempting to open: {file_path}")
         
         ext = Path(file_path).suffix.lower()
@@ -99,9 +144,9 @@ class ArtistController:
             return result
 
         elif ext in [".jpeg", ".jpg", ".png", ".bmp", ".tiff"]:
-            if not self.ocr_model:
+            if self.ocr_model is None:
                 await self.initialize()
-            
+                
             doc = DocumentFile.from_images(file_path)
             result = self.ocr_model(doc)
             
@@ -120,13 +165,14 @@ class ArtistController:
             raise ValueError(f"Unsupported file type: {ext}")
     
     def create_gemini_prompt(self, document_text: str) -> str:
-        """Create Gemini prompt - same as original"""
+        """
+        Create a complete prompt for Gemini to extract artist information
+        Based on the working prompt from the Flask implementation
+        """
         prompt_template = """
 # Artist Information Extraction Task
 
 You are an expert information extraction specialist. Please extract detailed information about artists/performers from the provided document text and format it as JSON.
-
-IMPORTANT: You must return valid JSON. Do not include any markdown formatting or code blocks.
 
 ## Required Information to Extract:
 
@@ -138,8 +184,9 @@ IMPORTANT: You must return valid JSON. Do not include any markdown formatting or
 6. **Contact Details** - Phone, email, social media, address
 7. **Summary** - Comprehensive summary based on extracted information
 
-## Output Format - Return ONLY this JSON structure with no additional text:
+## Output Format (JSON):
 
+```json
 {{
   "artist_name": "Full name or null",
   "guru_name": "Guru name or null",
@@ -186,6 +233,7 @@ IMPORTANT: You must return valid JSON. Do not include any markdown formatting or
   "extraction_confidence": "high/medium/low",
   "additional_notes": "Any other relevant information"
 }}
+```
 
 ## Guidelines:
 - Only extract explicitly mentioned information
@@ -193,70 +241,61 @@ IMPORTANT: You must return valid JSON. Do not include any markdown formatting or
 - Handle OCR errors intelligently
 - Focus on accuracy over completeness
 - Generate a factual summary based only on extracted data
-- Return ONLY the JSON object, no additional text or formatting
 
 ## Document Text to Analyze:
 
 {document_text}
 
-Analyze the text and return ONLY the JSON object:
+Please analyze the above text and provide the extracted information in the exact JSON format specified.
 """
         return prompt_template.format(document_text=document_text)
     
-    async def extract_artist_info_with_gemini(self, document_text: str) -> dict:
-        """Call Gemini API - same logic as original"""
+    async def extract_artist_info_with_gemini_improved(self, document_text: str) -> dict:
+        """
+        Call Gemini API with better JSON parsing that handles markdown code blocks
+        Based on the working function from the Flask implementation
+        """
         try:
-            if not self.gemini_model:
-                await self.initialize()
-
-            if not self.gemini_model:
-                # Gemini not available — return helpful error instead of raising
-                print("⚠️ Gemini not available, using fallback extraction")
-                return self.fallback_extraction(document_text)
-
-            prompt = self.create_gemini_prompt(document_text)
-            print(f"📝 Sending prompt to Gemini (text length: {len(document_text)})")
-
-            response = self.gemini_model.generate_content(prompt)
-            if not response or not response.text:
-                print("❌ Empty response from Gemini")
-                return self.fallback_extraction(document_text)
-                
-            content = response.text.strip()
-            print(f"📥 Received response from Gemini (length: {len(content)})")
+            if self.gemini_model is None:
+                if genai is not None and settings.GEMINI_API_KEY:
+                    self.gemini_model = genai.GenerativeModel("gemini-1.5-flash")
+                else:
+                    print("⚠️ Gemini model not available, using fallback extraction")
+                    return self.fallback_extraction(document_text)
             
-            # Handle markdown code blocks - same as original
+            prompt = self.create_gemini_prompt(document_text)
+            response = self.gemini_model.generate_content(prompt)
+            content = response.text.strip()
+            
+            # Handle markdown code blocks
             if "```json" in content:
+                # Extract JSON from markdown code blocks
                 json_match = re.search(r'```json\s*\n(.*?)\n```', content, re.DOTALL)
                 if json_match:
                     json_str = json_match.group(1)
                 else:
+                    # Fallback: find JSON between { and }
                     start = content.find('{')
                     end = content.rfind('}') + 1
                     json_str = content[start:end] if start != -1 and end > start else content
             else:
+                # Try to find JSON directly
                 start = content.find('{')
                 end = content.rfind('}') + 1
                 json_str = content[start:end] if start != -1 and end > start else content
             
-            print(f"🔍 Extracted JSON string: {json_str[:200]}...")
+            # Parse the cleaned JSON
             data = json.loads(json_str)
             print("✅ Successfully extracted and parsed artist information!")
-            
-            # Validate that we got meaningful data
-            if not data.get('artist_name') and not data.get('summary'):
-                print("⚠️ Gemini returned empty data, using fallback")
-                return self.fallback_extraction(document_text)
-                
             return data
             
         except json.JSONDecodeError as e:
-            print("Using fallback extraction due to JSON parsing error")
-            return self.fallback_extraction(document_text)
+            print(f"⚠️ JSON parsing error: {e}")
+            print("But we got a response from Gemini. Saving raw response...")
+            return {"raw_response": response.text, "parsing_error": str(e)}
         except Exception as e:
             print(f"❌ Unexpected error: {e}")
-            print("Using fallback extraction due to unexpected error")
-            return self.fallback_extraction(document_text)
+            return {"error": str(e), "raw_response": response.text if 'response' in locals() else None}
     
     def fallback_extraction(self, document_text: str) -> dict:
         """Fallback extraction using simple text processing when Gemini fails"""
@@ -268,297 +307,60 @@ Analyze the text and return ONLY the JSON object:
         
         # Try to find artist name (usually in first few lines or all caps)
         artist_name = None
-        for line in lines[:5]:  # Check first 5 lines
-            line = line.strip()
-            if line and (line.isupper() or len(line.split()) <= 4):
-                # Likely a name if it's short and/or all caps
-                artist_name = line.title()
-                break
-        
-        # Extract key information using keyword matching
-        guru_name = None
-        gharana = None
-        achievements = []
-        
-        # Look for guru/teacher mentions
-        guru_keywords = ['guru', 'teacher', 'disciple of', 'student of', 'learned from', 'ustad', 'pandit']
-        for keyword in guru_keywords:
-            if keyword in text_lower:
-                # Find the line containing the keyword
-                for line in lines:
-                    if keyword in line.lower():
-                        # Extract potential guru name
-                        words = line.split()
-                        for i, word in enumerate(words):
-                            if keyword.lower() in word.lower() and i < len(words) - 1:
-                                # Take next few words as potential guru name
-                                potential_guru = ' '.join(words[i+1:i+4])
-                                if potential_guru and not guru_name:
-                                    guru_name = potential_guru.strip('.,')
-                                break
-                        break
-        
-        # Look for gharana mentions
-        if 'gharana' in text_lower:
-            for line in lines:
-                if 'gharana' in line.lower():
-                    words = line.split()
-                    for i, word in enumerate(words):
-                        if 'gharana' in word.lower() and i > 0:
-                            gharana = words[i-1]
-                            break
+        for line in lines[:5]:
+            if line.strip() and len(line.strip()) > 2:
+                if line.isupper() or any(word.istitle() for word in line.split()):
+                    artist_name = line.strip()
                     break
         
-        # Look for achievements/performances
-        achievement_keywords = ['performed', 'concert', 'award', 'recognition', 'festival', 'competition']
-        for keyword in achievement_keywords:
-            if keyword in text_lower:
-                for line in lines:
-                    if keyword in line.lower():
-                        achievements.append({
-                            "type": "performance",
-                            "title": line.strip(),
-                            "year": None,
-                            "details": None
-                        })
-                        break
-        
-        # Create summary from first paragraph or first few sentences
-        summary = None
-        if document_text:
-            sentences = document_text.replace('\n', ' ').split('.')
-            if len(sentences) > 0:
-                summary = '. '.join(sentences[:3]).strip() + '.'
-        
+        # Create basic structure
         return {
             "artist_name": artist_name,
-            "guru_name": guru_name,
+            "guru_name": None,
             "gharana_details": {
-                "gharana_name": gharana,
+                "gharana_name": None,
                 "style": None,
-                "tradition": "Indian Classical" if "classical" in text_lower else None
-            } if gharana else None,
+                "tradition": None
+            },
             "biography": {
                 "early_life": None,
-                "background": summary,
+                "background": None,
                 "education": None,
                 "career_highlights": None
             },
-            "achievements": achievements,
-            "contact_details": None,
-            "summary": summary,
-            "extraction_confidence": "medium",
-            "additional_notes": "Extracted using fallback method due to AI processing issues"
+            "achievements": [],
+            "contact_details": {
+                "social_media": {
+                    "instagram": None,
+                    "facebook": None,
+                    "twitter": None,
+                    "youtube": None,
+                    "other": None
+                },
+                "contact_info": {
+                    "phone": None,
+                    "email": None,
+                    "website": None
+                },
+                "address": {
+                    "full_address": None,
+                    "city": None,
+                    "state": None,
+                    "country": None
+                }
+            },
+            "summary": f"Basic extraction from document (Gemini unavailable). Text length: {len(document_text)} characters.",
+            "extraction_confidence": "low",
+            "additional_notes": "Fallback extraction method used"
         }
-    
-    def extract_artist_name_from_filename(self, filename: str) -> str:
-        """Extract artist name from filename"""
-        try:
-            # Remove file extension
-            name = Path(filename).stem
-            
-            # Remove timestamp prefix if present (format: YYYYMMDD_HHMMSS_)
-            import re
-            name = re.sub(r'^\d{8}_\d{6}_', '', name)
-            
-            # Replace underscores and hyphens with spaces
-            name = name.replace('_', ' ').replace('-', ' ')
-            
-            # Title case the name
-            name = name.title()
-            
-            # Clean up extra spaces
-            name = ' '.join(name.split())
-            
-            print(f"📝 Extracted artist name from filename '{filename}': '{name}'")
-            return name
-            
-        except Exception as e:
-            print(f"❌ Error extracting name from filename: {e}")
-            return "Unknown Artist"
-    
-    def create_enhancement_prompt(self, extracted_data: dict, artist_name: str, document_text: str) -> str:
-        """Create prompt for enhancing extracted data with filename-derived artist name"""
-        prompt_template = """
-# Artist Information Enhancement Task
-
-You are an expert information extraction specialist. I have partially extracted artist information that contains some null values. Please enhance and complete this information using the provided document text and the artist name derived from the filename.
-
-    
-    def extract_artist_name_from_filename(self, filename: str) -> str:
-        """Extract artist name from filename"""
-        try:
-            # Remove file extension
-            name = Path(filename).stem
-            
-            # Remove timestamp prefix if present (format: YYYYMMDD_HHMMSS_)
-            import re
-            name = re.sub(r'^\d{8}_\d{6}_', '', name)
-            
-            # Replace underscores and hyphens with spaces
-            name = name.replace('_', ' ').replace('-', ' ')
-            
-            # Title case the name
-            name = name.title()
-            
-            # Clean up extra spaces
-            name = ' '.join(name.split())
-            
-            print(f"📝 Extracted artist name from filename '{filename}': '{name}'")
-            return name
-            
-        except Exception as e:
-            print(f"❌ Error extracting name from filename: {e}")
-            return "Unknown Artist"
-    
-    def create_enhancement_prompt(self, extracted_data: dict, artist_name: str, document_text: str) -> str:
-        """Create prompt for enhancing extracted data with filename-derived artist name"""
-        prompt_template = """
-# Artist Information Enhancement Task
-
-You are an expert information extraction specialist. I have partially extracted artist information that contains some null values. Please enhance and complete this information using the provided document text and the artist name derived from the filename.
-
-                artist_info_raw = enhanced_info
-                print("✅ STEP 5: Data enhanced successfully with Gemini")
-            else:
-                print("⚠️ STEP 5: Enhancement failed, using original data with filename artist name")
-    
-    def extract_artist_name_from_filename(self, filename: str) -> str:
-        """Extract artist name from filename"""
-        try:
-            # Remove file extension
-            name = Path(filename).stem
-            
-            # Remove timestamp prefix if present (format: YYYYMMDD_HHMMSS_)
-            import re
-            name = re.sub(r'^\d{8}_\d{6}_', '', name)
-            
-            # Replace underscores and hyphens with spaces
-            name = name.replace('_', ' ').replace('-', ' ')
-            
-            # Title case the name
-            name = name.title()
-            
-            # Clean up extra spaces
-            name = ' '.join(name.split())
-            
-            print(f"📝 Extracted artist name from filename '{filename}': '{name}'")
-            return name
-            
-        except Exception as e:
-            print(f"❌ Error extracting name from filename: {e}")
-            return "Unknown Artist"
-    
-    def create_enhancement_prompt(self, extracted_data: dict, artist_name: str, document_text: str) -> str:
-        """Create prompt for enhancing extracted data with filename-derived artist name"""
-        prompt_template = """
-# Artist Information Enhancement Task
-
-You are an expert information extraction specialist. I have partially extracted artist information that contains some null values. Please enhance and complete this information using the provided document text and the artist name derived from the filename.
-
-    
-    def extract_artist_name_from_filename(self, filename: str) -> str:
-        """Extract artist name from filename"""
-        try:
-            # Remove file extension
-            name = Path(filename).stem
-            
-            # Remove timestamp prefix if present (format: YYYYMMDD_HHMMSS_)
-            import re
-            name = re.sub(r'^\d{8}_\d{6}_', '', name)
-            
-            # Replace underscores and hyphens with spaces
-            name = name.replace('_', ' ').replace('-', ' ')
-            
-            # Title case the name
-            name = name.title()
-            
-            # Clean up extra spaces
-            name = ' '.join(name.split())
-            
-            print(f"📝 Extracted artist name from filename '{filename}': '{name}'")
-            return name
-            
-        except Exception as e:
-            print(f"❌ Error extracting name from filename: {e}")
-            return "Unknown Artist"
-    
-    def create_enhancement_prompt(self, extracted_data: dict, artist_name: str, document_text: str) -> str:
-        """Create prompt for enhancing extracted data with filename-derived artist name"""
-        prompt_template = """
-# Artist Information Enhancement Task
-
-You are an expert information extraction specialist. I have partially extracted artist information that contains some null values. Please enhance and complete this information using the provided document text and the artist name derived from the filename.
-
-    
-    def extract_artist_name_from_filename(self, filename: str) -> str:
-        """Extract artist name from filename"""
-        try:
-            # Remove file extension
-            name = Path(filename).stem
-            
-            # Remove timestamp prefix if present (format: YYYYMMDD_HHMMSS_)
-            import re
-            name = re.sub(r'^\d{8}_\d{6}_', '', name)
-            
-            # Replace underscores and hyphens with spaces
-            name = name.replace('_', ' ').replace('-', ' ')
-            
-            # Title case the name
-            name = name.title()
-            
-            # Clean up extra spaces
-            name = ' '.join(name.split())
-            
-            print(f"📝 Extracted artist name from filename '{filename}': '{name}'")
-            return name
-            
-        except Exception as e:
-            print(f"❌ Error extracting name from filename: {e}")
-            return "Unknown Artist"
-    
-    def create_enhancement_prompt(self, extracted_data: dict, artist_name: str, document_text: str) -> str:
-        """Create prompt for enhancing extracted data with filename-derived artist name"""
-        prompt_template = """
-# Artist Information Enhancement Task
-
-You are an expert information extraction specialist. I have partially extracted artist information that contains some null values. Please enhance and complete this information using the provided document text and the artist name derived from the filename.
-
-                if json_match:
-                    json_str = json_match.group(1)
-                else:
-                    start = content.find('{')
-                    end = content.rfind('}') + 1
-                    json_str = content[start:end] if start != -1 and end > start else content
-            else:
-                start = content.find('{')
-                end = content.rfind('}') + 1
-                json_str = content[start:end] if start != -1 and end > start else content
-            
-            enhanced_data = json.loads(json_str)
-            print("✅ Successfully enhanced artist information with Gemini!")
-            
-            # Ensure artist name is set
-            enhanced_data["artist_name"] = artist_name
-            return enhanced_data
-            
-        except json.JSONDecodeError as e:
-            print(f"⚠️ JSON parsing error during enhancement: {e}")
-            extracted_data["artist_name"] = artist_name
-            extracted_data["additional_notes"] = "Enhanced with filename-derived artist name (JSON parsing failed)"
-            return extracted_data
-        except Exception as e:
-            print(f"❌ Unexpected error during enhancement: {e}")
-            extracted_data["artist_name"] = artist_name
-            extracted_data["additional_notes"] = "Enhanced with filename-derived artist name (enhancement failed)"
-            return extracted_data
-    
     
     async def extract_artist_info(self, file: UploadFile, current_user: Dict[str, Any]) -> Dict[str, Any]:
         """
-        Extract artist information from uploaded file
-        Maintains the same accuracy as the original Flask implementation
+        Main extraction workflow - FastAPI version of working Flask implementation
+        Includes filename-based fallback to guarantee artist_name is never null
         """
+        print("🚀 Starting Artist Information Extraction Workflow (FastAPI + Flask logic)")
+        
         # Validate file
         if not is_allowed_file(file.filename):
             raise HTTPException(
@@ -573,22 +375,29 @@ You are an expert information extraction specialist. I have partially extracted 
             )
         
         try:
+            # Initialize if needed
+            if self.ocr_model is None:
+                await self.initialize()
+            
             # Save uploaded file using utility
             try:
                 content = await file.read()
                 file_path = save_uploaded_file(content, file.filename)
                 filename = file.filename
                 saved_filename = os.path.basename(file_path)
-                print(f"Processing file: {filename} (saved as: {saved_filename})")
+                print(f"📁 File saved: {filename} → {saved_filename}")
             except Exception as e:
-                print(f"Error while saving uploaded file: {e}")
-                # Surface a meaningful error to the client
+                print(f"❌ Error saving file: {e}")
                 raise HTTPException(
                     status_code=status.HTTP_400_BAD_REQUEST,
                     detail=f"Error processing file: {str(e)}"
                 )
             
-            # Extract text from document
+            # Extract artist name from filename as fallback (GUARANTEE never null)
+            filename_artist_name = self.extract_artist_name_from_filename(filename)
+            print(f"🎯 FALLBACK Artist Name: '{filename_artist_name}' (from filename)")
+            
+            # Extract text from document (using working Flask logic)
             extracted_text = await self.extract_text(file_path)
             
             if not extracted_text or len(extracted_text.strip()) < 10:
@@ -597,59 +406,41 @@ You are an expert information extraction specialist. I have partially extracted 
                     detail="Could not extract meaningful text from the document"
                 )
             
-            # Extract artist name from filename as fallback
-            filename_artist_name = self.extract_artist_name_from_filename(filename)
-            print(f"📝 Artist name from filename: {filename_artist_name}")
+            print(f"✅ Text extraction completed - {len(extracted_text)} characters")
             
-            # Step 1: Extract artist name from filename
-            filename_artist_name = self.extract_artist_name_from_filename(filename)
-            print(f"🎯 Artist name from filename: {filename_artist_name}")
+            # Get artist information using Gemini (using working Flask logic)
+            artist_info = await self.extract_artist_info_with_gemini_improved(extracted_text)
             
-            # Step 2: Get initial artist information using Gemini
-            artist_info_raw = await self.extract_artist_info_with_gemini(extracted_text)
+            # IMPORTANT: Ensure artist_name is never null using filename fallback
+            if not artist_info.get("artist_name"):
+                print(f"⚠️ artist_name was null, using filename fallback: '{filename_artist_name}'")
+                artist_info["artist_name"] = filename_artist_name
             
-            # Step 3: Check if artist_name is null and enhance with filename
-            if not artist_info_raw.get("artist_name") or artist_info_raw.get("artist_name") in [None, "", "null"]:
-                print(f"🔄 Artist name is null, using filename: {filename_artist_name}")
-                print("🚀 Enhancing extracted data with Gemini using filename-derived artist name...")
-                
-                # Enhance the data with filename-derived artist name
-                artist_info_raw = await self.enhance_artist_info_with_gemini(
-                    artist_info_raw, 
-                    filename_artist_name, 
-                    extracted_text
-                )
-            else:
-                print(f"✅ Artist name found in extraction: {artist_info_raw.get('artist_name')}")
-            
-            # Check if artist_name is null and use filename fallback + enhancement
-            if not artist_info_raw.get('artist_name') or artist_info_raw.get('artist_name') in [None, '', 'null']:
-                print(f"🔄 Artist name is null, using filename fallback: {filename_artist_name}")
-                artist_info_raw['artist_name'] = filename_artist_name
-                
-                # Enhance the data with Gemini using filename artist name
-                enhanced_info = await self.enhance_artist_info_with_gemini(
-                    artist_info_raw, filename_artist_name, extracted_text
-                )
-                if enhanced_info:
-                    artist_info_raw = enhanced_info
-                    print("✅ Artist info enhanced with Gemini using filename artist name")
+            # Add processing metadata
+            artist_info["_metadata"] = {
+                "filename_artist_name": filename_artist_name,
+                "extracted_text_length": len(extracted_text),
+                "processing_timestamp": datetime.now().isoformat(),
+                "workflow_version": "flask_to_fastapi_v1.0"
+            }
             
             # Convert to Pydantic model for validation
             try:
-                artist_info = ArtistInfo(**artist_info_raw)
-                print("✅ STEP 6: Data validation successful")
+                artist_info_obj = ArtistInfo(**artist_info)
+                print("✅ Data validation successful")
             except Exception as e:
-                print(f"⚠️ STEP 6: Validation error: {e}")
-                # If validation fails, store raw data
-                artist_info = ArtistInfo(
-                    artist_name=filename_artist_name,  # Ensure we have at least the filename
-                    summary=f"Raw extraction data (validation failed): {str(artist_info_raw)[:500]}..."
+                print(f"⚠️ Validation error: {e}")
+                # If validation fails, create minimal valid object with guaranteed artist name
+                artist_info_obj = ArtistInfo(
+                    artist_name=filename_artist_name,  # GUARANTEED from filename
+                    summary=f"Artist information extracted from '{filename}'. Raw data available."
                 )
+                print(f"✅ Fallback validation successful with artist_name='{filename_artist_name}'")
             
-            # STEP 7: Save to MongoDB
+            # Save to MongoDB
+            print("🔄 Saving to MongoDB...")
             artist_doc = {
-                "artist_info": artist_info.dict(),
+                "artist_info": artist_info_obj.dict(),
                 "original_filename": filename,
                 "saved_filename": saved_filename,
                 "extracted_text": extracted_text,
@@ -657,12 +448,19 @@ You are an expert information extraction specialist. I have partially extracted 
                 "created_by": ObjectId(current_user["_id"]),
             }
             
-            artist_id = await artist_model.create_artist(artist_doc)
+            # FINAL GUARANTEE: Ensure artist_name is never null before saving
+            if not artist_doc["artist_info"].get("artist_name"):
+                artist_doc["artist_info"]["artist_name"] = filename_artist_name
+                print(f"🛡️ FINAL SAFETY: Set artist_name to '{filename_artist_name}' before saving!")
             
-            print(f"✅ STEP 7: Results saved to MongoDB with ID: {artist_id}")
+            artist_id = await artist_model.create_artist(artist_doc)
+            print(f"✅ Results saved to MongoDB with ID: {artist_id}")
             
             # Clean up temporary file
             cleanup_temp_file(file_path)
+            
+            print("🎉 Extraction Workflow Completed Successfully!")
+            print(f"🎯 Artist Name GUARANTEED: '{artist_info_obj.artist_name}' (never null)")
             
             return {
                 "success": True,
@@ -671,15 +469,16 @@ You are an expert information extraction specialist. I have partially extracted 
                 "filename_artist_name": filename_artist_name,
                 "extracted_text_length": len(extracted_text),
                 "extracted_text_preview": extracted_text[:200] + "..." if len(extracted_text) > 200 else extracted_text,
-                "extracted_text": extracted_text,
-                "artist_info": artist_info.dict(),
-                "message": "Artist information extracted and saved successfully"
+                "artist_info": artist_info_obj.dict(),
+                "workflow_version": "flask_to_fastapi_v1.0",
+                "guarantee": f"artist_name='{artist_info_obj.artist_name}' is GUARANTEED to never be null",
+                "message": "Artist information extracted and saved successfully using Flask workflow in FastAPI"
             }
             
         except HTTPException:
             raise
         except Exception as e:
-            print(f"Error processing file: {str(e)}")
+            print(f"❌ Error in extraction workflow: {str(e)}")
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail=f"Error processing file: {str(e)}"
