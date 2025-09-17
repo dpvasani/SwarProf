@@ -321,6 +321,7 @@ Please analyze the above text and provide the extracted information in the exact
                 "filename": filename,
                 "extracted_text_length": len(extracted_text),
                 "extracted_text_preview": extracted_text[:200] + "..." if len(extracted_text) > 200 else extracted_text,
+                "extracted_text": extracted_text,
                 "artist_info": artist_info.dict(),
                 "message": "Artist information extracted and saved successfully"
             }

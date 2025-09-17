@@ -37,7 +37,15 @@ async def get_artist(
     current_user: Dict[str, Any] = Depends(get_current_user)
 ):
     """Get specific artist by ID"""
-    return await artist_controller.get_artist(artist_id, current_user)
+    try:
+        result = await artist_controller.get_artist(artist_id, current_user)
+        return result
+    except Exception as e:
+        from fastapi import HTTPException, status
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Artist not found: {str(e)}"
+        )
 
 @router.get("/results")
 async def list_results(

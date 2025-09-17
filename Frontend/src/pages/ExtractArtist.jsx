@@ -76,10 +76,17 @@ const ExtractArtist = () => {
             : f
         ));
 
+        // Extract artist info from the response
+        const artistInfo = response.data.artist_info || {};
+        const extractedText = response.data.extracted_text_preview || response.data.extracted_text || '';
+        
+        // Convert single artist info to array format for consistency
+        const artists = artistInfo.artist_name ? [artistInfo] : [];
+        
         newResults.push({
           filename: fileItem.file.name,
-          artists: response.data.artists || [],
-          extractedText: response.data.extracted_text || '',
+          artists: artists,
+          extractedText: extractedText,
         });
 
       } catch (error) {
@@ -293,10 +300,10 @@ const ExtractArtist = () => {
                       <div className="space-y-2">
                         {result.artists.map((artist, artistIndex) => (
                           <div key={artistIndex} className="p-3 rounded-lg glass">
-                            <p className="text-white font-medium">{artist.name || 'Unknown Artist'}</p>
-                            {artist.bio && (
+                            <p className="text-white font-medium">{artist.artist_name || 'Unknown Artist'}</p>
+                            {artist.summary && (
                               <p className="text-white text-opacity-60 text-sm mt-1">
-                                {artist.bio.substring(0, 100)}...
+                                {artist.summary.substring(0, 100)}...
                               </p>
                             )}
                           </div>

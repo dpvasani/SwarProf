@@ -34,7 +34,18 @@ const Dashboard = () => {
         
         // Fetch recent artists
         const artistsResponse = await artistAPI.getArtists({ limit: 5, sort: 'created_at' });
-        setRecentArtists(artistsResponse.data.artists || []);
+        
+        // Transform the data to match frontend expectations
+        const artistsData = artistsResponse.data.artists || [];
+        const transformedArtists = artistsData.map(artist => ({
+          id: artist._id,
+          name: artist.artist_info?.artist_name || 'Unknown Artist',
+          bio: artist.artist_info?.summary || artist.artist_info?.biography?.background || '',
+          created_at: artist.created_at,
+          artist_info: artist.artist_info
+        }));
+        
+        setRecentArtists(transformedArtists);
         
         // Mock stats for now (replace with actual API calls)
         setStats({
@@ -270,11 +281,11 @@ const Dashboard = () => {
                   >
                     <div className="w-12 h-12 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 flex items-center justify-center">
                       <span className="text-white font-semibold">
-                        {artist.name?.charAt(0) || 'A'}
+                        {(artist.name || 'Unknown Artist').charAt(0)}
                       </span>
                     </div>
                     <div className="flex-1">
-                      <p className="text-white font-medium">{artist.name || 'Unknown Artist'}</p>
+                      <p className="text-white font-medium">{artist.name}</p>
                       <p className="text-white text-opacity-60 text-sm">
                         {artist.bio ? artist.bio.substring(0, 50) + '...' : 'No bio available'}
                       </p>

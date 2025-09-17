@@ -27,7 +27,27 @@ const ArtistDetail = () => {
       try {
         setLoading(true);
         const response = await artistAPI.getArtist(id);
-        setArtist(response.data);
+        
+        // Transform the backend data to match frontend expectations
+        const artistData = response.data.artist;
+        if (artistData) {
+          const transformedArtist = {
+            id: artistData._id,
+            name: artistData.artist_info?.artist_name || 'Unknown Artist',
+            bio: artistData.artist_info?.summary || artistData.artist_info?.biography?.background || '',
+            birth_date: artistData.artist_info?.biography?.early_life,
+            nationality: artistData.artist_info?.contact_details?.address?.country,
+            style: artistData.artist_info?.gharana_details?.style,
+            achievements: artistData.artist_info?.achievements || [],
+            created_at: artistData.created_at,
+            updated_at: artistData.updated_at,
+            original_filename: artistData.original_filename,
+            artist_info: artistData.artist_info
+          };
+          setArtist(transformedArtist);
+        } else {
+          setError('Artist data not found');
+        }
       } catch (error) {
         console.error('Failed to fetch artist:', error);
         setError('Failed to load artist details');
@@ -100,12 +120,12 @@ const ArtistDetail = () => {
             <div className="flex items-center space-x-6 mb-6 md:mb-0">
               <div className="w-20 h-20 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 flex items-center justify-center">
                 <span className="text-white text-3xl font-semibold">
-                  {artist.name?.charAt(0) || 'A'}
+                  {(artist.name || 'Unknown Artist').charAt(0)}
                 </span>
               </div>
               <div>
                 <h1 className="text-4xl font-bold text-white mb-2">
-                  {artist.name || 'Unknown Artist'}
+                  {artist.name}
                 </h1>
                 <p className="text-white text-opacity-60">
                   Added on {formatDate(artist.created_at)}

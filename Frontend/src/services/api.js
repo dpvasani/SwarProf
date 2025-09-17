@@ -54,8 +54,17 @@ export const artistAPI = {
     return api.post('/api/extract', formData);
   },
   // Note: don't set Content-Type manually for FormData posts; the browser/axios will set the boundary
-  getArtists: (params = {}) => api.get('/api/artists', { params }),
-  getArtist: (id) => api.get(`/api/artists/${id}`),
+  getArtists: (params = {}) => {
+    console.log('Fetching artists with params:', params);
+    return api.get('/api/artists', { params });
+  },
+  getArtist: (id) => {
+    console.log('Fetching artist with ID:', id);
+    if (!id || id === 'undefined') {
+      return Promise.reject(new Error('Invalid artist ID'));
+    }
+    return api.get(`/api/artists/${id}`);
+  },
   updateArtist: (id, data) => api.put(`/api/artists/${id}`, data),
   deleteArtist: (id) => api.delete(`/api/artists/${id}`),
 };

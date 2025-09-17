@@ -35,7 +35,21 @@ const Artists = () => {
         search: searchTerm,
       });
       
-      setArtists(response.data.artists || []);
+      // Handle the response structure from backend
+      const artistsData = response.data.artists || [];
+      
+      // Transform the data to match frontend expectations
+      const transformedArtists = artistsData.map(artist => ({
+        id: artist._id,
+        name: artist.artist_info?.artist_name || 'Unknown Artist',
+        bio: artist.artist_info?.summary || artist.artist_info?.biography?.background || '',
+        created_at: artist.created_at,
+        updated_at: artist.updated_at,
+        original_filename: artist.original_filename,
+        artist_info: artist.artist_info
+      }));
+      
+      setArtists(transformedArtists);
       setTotalPages(response.data.total_pages || 1);
       setTotalArtists(response.data.total || 0);
     } catch (error) {
@@ -129,9 +143,7 @@ const Artists = () => {
                 <div>
                   <p className="text-2xl font-bold text-white">
                     {artists.filter(a => a.bio && a.bio.length > 0).length}
-                  </p>
-                  <p className="text-white text-opacity-60 text-sm">With Bio</p>
-                </div>
+                <span className="text-xl font-bold text-white">{artists.filter(a => a.bio && a.bio.length > 0).length}</span>
               </div>
             </div>
           </div>
@@ -174,14 +186,14 @@ const Artists = () => {
                 {/* Artist Avatar */}
                 <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 flex items-center justify-center">
                   <span className="text-white text-xl font-semibold">
-                    {artist.name?.charAt(0) || 'A'}
+                    {(artist.name || 'Unknown Artist').charAt(0)}
                   </span>
                 </div>
 
                 {/* Artist Info */}
                 <div className="text-center mb-4">
                   <h3 className="text-lg font-semibold text-white mb-1">
-                    {artist.name || 'Unknown Artist'}
+                    {artist.name}
                   </h3>
                   <p className="text-white text-opacity-60 text-sm mb-2">
                     Added {formatDate(artist.created_at)}
