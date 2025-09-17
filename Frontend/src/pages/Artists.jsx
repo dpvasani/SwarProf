@@ -143,7 +143,9 @@ const Artists = () => {
                 <div>
                   <p className="text-2xl font-bold text-white">
                     {artists.filter(a => a.bio && a.bio.length > 0).length}
-                <span className="text-xl font-bold text-white">{artists.filter(a => a.bio && a.bio.length > 0).length}</span>
+                  </p>
+                  <p className="text-white text-opacity-60 text-sm">With Bio</p>
+                </div>
               </div>
             </div>
           </div>
