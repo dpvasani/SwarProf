@@ -126,6 +126,8 @@ class ArtistController:
 
 You are an expert information extraction specialist. Please extract detailed information about artists/performers from the provided document text and format it as JSON.
 
+IMPORTANT: You must return valid JSON. Do not include any markdown formatting or code blocks.
+
 ## Required Information to Extract:
 
 1. **Artist Name** - Full name of the artist/performer
@@ -136,9 +138,8 @@ You are an expert information extraction specialist. Please extract detailed inf
 6. **Contact Details** - Phone, email, social media, address
 7. **Summary** - Comprehensive summary based on extracted information
 
-## Output Format (JSON):
+## Output Format - Return ONLY this JSON structure with no additional text:
 
-```json
 {{
   "artist_name": "Full name or null",
   "guru_name": "Guru name or null",
@@ -185,7 +186,6 @@ You are an expert information extraction specialist. Please extract detailed inf
   "extraction_confidence": "high/medium/low",
   "additional_notes": "Any other relevant information"
 }}
-```
 
 ## Guidelines:
 - Only extract explicitly mentioned information
@@ -193,12 +193,13 @@ You are an expert information extraction specialist. Please extract detailed inf
 - Handle OCR errors intelligently
 - Focus on accuracy over completeness
 - Generate a factual summary based only on extracted data
+- Return ONLY the JSON object, no additional text or formatting
 
 ## Document Text to Analyze:
 
 {document_text}
 
-Please analyze the above text and provide the extracted information in the exact JSON format specified.
+Analyze the text and return ONLY the JSON object:
 """
         return prompt_template.format(document_text=document_text)
     
@@ -210,12 +211,19 @@ Please analyze the above text and provide the extracted information in the exact
 
             if not self.gemini_model:
                 # Gemini not available — return helpful error instead of raising
-                return {"error": "Gemini SDK not available or GEMINI_API_KEY not configured"}
+                print("⚠️ Gemini not available, using fallback extraction")
+                return self.fallback_extraction(document_text)
 
             prompt = self.create_gemini_prompt(document_text)
+            print(f"📝 Sending prompt to Gemini (text length: {len(document_text)})")
 
             response = self.gemini_model.generate_content(prompt)
+            if not response or not response.text:
+                print("❌ Empty response from Gemini")
+                return self.fallback_extraction(document_text)
+                
             content = response.text.strip()
+            print(f"📥 Received response from Gemini (length: {len(content)})")
             
             # Handle markdown code blocks - same as original
             if "```json" in content:
@@ -231,16 +239,117 @@ Please analyze the above text and provide the extracted information in the exact
                 end = content.rfind('}') + 1
                 json_str = content[start:end] if start != -1 and end > start else content
             
+            print(f"🔍 Extracted JSON string: {json_str[:200]}...")
             data = json.loads(json_str)
             print("✅ Successfully extracted and parsed artist information!")
+            
+            # Validate that we got meaningful data
+            if not data.get('artist_name') and not data.get('summary'):
+                print("⚠️ Gemini returned empty data, using fallback")
+                return self.fallback_extraction(document_text)
+                
             return data
             
         except json.JSONDecodeError as e:
-            print(f"⚠️ JSON parsing error: {e}")
-            return {"raw_response": response.text, "parsing_error": str(e)}
+            print("Using fallback extraction due to JSON parsing error")
+            return self.fallback_extraction(document_text)
         except Exception as e:
             print(f"❌ Unexpected error: {e}")
-            return {"error": str(e), "raw_response": response.text if 'response' in locals() else None}
+            print("Using fallback extraction due to unexpected error")
+            return self.fallback_extraction(document_text)
+    
+    def fallback_extraction(self, document_text: str) -> dict:
+        """Fallback extraction using simple text processing when Gemini fails"""
+        print("🔄 Using fallback extraction method")
+        
+        # Simple text analysis to extract basic information
+        lines = document_text.split('\n')
+        text_lower = document_text.lower()
+        
+        # Try to find artist name (usually in first few lines or all caps)
+        artist_name = None
+        for line in lines[:5]:  # Check first 5 lines
+            line = line.strip()
+            if line and (line.isupper() or len(line.split()) <= 4):
+                # Likely a name if it's short and/or all caps
+                artist_name = line.title()
+                break
+        
+        # Extract key information using keyword matching
+        guru_name = None
+        gharana = None
+        achievements = []
+        
+        # Look for guru/teacher mentions
+        guru_keywords = ['guru', 'teacher', 'disciple of', 'student of', 'learned from', 'ustad', 'pandit']
+        for keyword in guru_keywords:
+            if keyword in text_lower:
+                # Find the line containing the keyword
+                for line in lines:
+                    if keyword in line.lower():
+                        # Extract potential guru name
+                        words = line.split()
+                        for i, word in enumerate(words):
+                            if keyword.lower() in word.lower() and i < len(words) - 1:
+                                # Take next few words as potential guru name
+                                potential_guru = ' '.join(words[i+1:i+4])
+                                if potential_guru and not guru_name:
+                                    guru_name = potential_guru.strip('.,')
+                                break
+                        break
+        
+        # Look for gharana mentions
+        if 'gharana' in text_lower:
+            for line in lines:
+                if 'gharana' in line.lower():
+                    words = line.split()
+                    for i, word in enumerate(words):
+                        if 'gharana' in word.lower() and i > 0:
+                            gharana = words[i-1]
+                            break
+                    break
+        
+        # Look for achievements/performances
+        achievement_keywords = ['performed', 'concert', 'award', 'recognition', 'festival', 'competition']
+        for keyword in achievement_keywords:
+            if keyword in text_lower:
+                for line in lines:
+                    if keyword in line.lower():
+                        achievements.append({
+                            "type": "performance",
+                            "title": line.strip(),
+                            "year": None,
+                            "details": None
+                        })
+                        break
+        
+        # Create summary from first paragraph or first few sentences
+        summary = None
+        if document_text:
+            sentences = document_text.replace('\n', ' ').split('.')
+            if len(sentences) > 0:
+                summary = '. '.join(sentences[:3]).strip() + '.'
+        
+        return {
+            "artist_name": artist_name,
+            "guru_name": guru_name,
+            "gharana_details": {
+                "gharana_name": gharana,
+                "style": None,
+                "tradition": "Indian Classical" if "classical" in text_lower else None
+            } if gharana else None,
+            "biography": {
+                "early_life": None,
+                "background": summary,
+                "education": None,
+                "career_highlights": None
+            },
+            "achievements": achievements,
+            "contact_details": None,
+            "summary": summary,
+            "extraction_confidence": "medium",
+            "additional_notes": "Extracted using fallback method due to AI processing issues"
+        }
     
     async def extract_artist_info(self, file: UploadFile, current_user: Dict[str, Any]) -> Dict[str, Any]:
         """

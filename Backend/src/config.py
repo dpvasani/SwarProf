@@ -47,6 +47,11 @@ class Settings:
     # AI/ML settings
     GEMINI_API_KEY: str = os.getenv("GEMINI_API_KEY", "")
     
+    def __post_init__(self):
+        """Validate configuration after initialization"""
+        if not self.GEMINI_API_KEY:
+            print("⚠️ Warning: GEMINI_API_KEY not set. AI extraction will use fallback method.")
+    
     # File upload settings
     MAX_FILE_SIZE: int = int(os.getenv("MAX_FILE_SIZE", str(16 * 1024 * 1024)))  # 16MB
     UPLOAD_FOLDER: str = os.getenv("UPLOAD_FOLDER", "uploads")
