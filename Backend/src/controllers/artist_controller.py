@@ -384,6 +384,74 @@ Analyze the text and return ONLY the JSON object:
 
 You are an expert information extraction specialist. I have partially extracted artist information that contains some null values. Please enhance and complete this information using the provided document text and the artist name derived from the filename.
 
+    
+    def extract_artist_name_from_filename(self, filename: str) -> str:
+        """Extract artist name from filename"""
+        try:
+            # Remove file extension
+            name = Path(filename).stem
+            
+            # Remove timestamp prefix if present (format: YYYYMMDD_HHMMSS_)
+            import re
+            name = re.sub(r'^\d{8}_\d{6}_', '', name)
+            
+            # Replace underscores and hyphens with spaces
+            name = name.replace('_', ' ').replace('-', ' ')
+            
+            # Title case the name
+            name = name.title()
+            
+            # Clean up extra spaces
+            name = ' '.join(name.split())
+            
+            print(f"📝 Extracted artist name from filename '{filename}': '{name}'")
+            return name
+            
+        except Exception as e:
+            print(f"❌ Error extracting name from filename: {e}")
+            return "Unknown Artist"
+    
+    def create_enhancement_prompt(self, extracted_data: dict, artist_name: str, document_text: str) -> str:
+        """Create prompt for enhancing extracted data with filename-derived artist name"""
+        prompt_template = """
+# Artist Information Enhancement Task
+
+You are an expert information extraction specialist. I have partially extracted artist information that contains some null values. Please enhance and complete this information using the provided document text and the artist name derived from the filename.
+
+    
+    def extract_artist_name_from_filename(self, filename: str) -> str:
+        """Extract artist name from filename"""
+        try:
+            # Remove file extension
+            name = Path(filename).stem
+            
+            # Remove timestamp prefix if present (format: YYYYMMDD_HHMMSS_)
+            import re
+            name = re.sub(r'^\d{8}_\d{6}_', '', name)
+            
+            # Replace underscores and hyphens with spaces
+            name = name.replace('_', ' ').replace('-', ' ')
+            
+            # Title case the name
+            name = name.title()
+            
+            # Clean up extra spaces
+            name = ' '.join(name.split())
+            
+            print(f"📝 Extracted artist name from filename '{filename}': '{name}'")
+            return name
+            
+        except Exception as e:
+            print(f"❌ Error extracting name from filename: {e}")
+            return "Unknown Artist"
+    
+    def create_enhancement_prompt(self, extracted_data: dict, artist_name: str, document_text: str) -> str:
+        """Create prompt for enhancing extracted data with filename-derived artist name"""
+        prompt_template = """
+# Artist Information Enhancement Task
+
+You are an expert information extraction specialist. I have partially extracted artist information that contains some null values. Please enhance and complete this information using the provided document text and the artist name derived from the filename.
+
                 if json_match:
                     json_str = json_match.group(1)
                 else:
@@ -503,7 +571,6 @@ You are an expert information extraction specialist. I have partially extracted 
                 # If validation fails, store raw data
                 artist_info = ArtistInfo(
                     artist_name=filename_artist_name,  # Ensure we have at least the filename
-                    artist_name=filename_artist_name,  # Ensure we at least have the filename artist name
                     summary=f"Raw extraction data (validation failed): {str(artist_info_raw)[:500]}..."
                 )
             
