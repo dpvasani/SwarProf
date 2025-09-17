@@ -351,6 +351,69 @@ Analyze the text and return ONLY the JSON object:
             "additional_notes": "Extracted using fallback method due to AI processing issues"
         }
     
+    def extract_artist_name_from_filename(self, filename: str) -> str:
+        """Extract artist name from filename"""
+        try:
+            # Remove file extension
+            name = Path(filename).stem
+            
+            # Remove timestamp prefix if present (format: YYYYMMDD_HHMMSS_)
+            import re
+            name = re.sub(r'^\d{8}_\d{6}_', '', name)
+            
+            # Replace underscores and hyphens with spaces
+            name = name.replace('_', ' ').replace('-', ' ')
+            
+            # Title case the name
+            name = name.title()
+            
+            # Clean up extra spaces
+            name = ' '.join(name.split())
+            
+            print(f"📝 Extracted artist name from filename '{filename}': '{name}'")
+            return name
+            
+        except Exception as e:
+            print(f"❌ Error extracting name from filename: {e}")
+            return "Unknown Artist"
+    
+    def create_enhancement_prompt(self, extracted_data: dict, artist_name: str, document_text: str) -> str:
+        """Create prompt for enhancing extracted data with filename-derived artist name"""
+        prompt_template = """
+# Artist Information Enhancement Task
+
+You are an expert information extraction specialist. I have partially extracted artist information that contains some null values. Please enhance and complete this information using the provided document text and the artist name derived from the filename.
+
+                if json_match:
+                    json_str = json_match.group(1)
+                else:
+                    start = content.find('{')
+                    end = content.rfind('}') + 1
+                    json_str = content[start:end] if start != -1 and end > start else content
+            else:
+                start = content.find('{')
+                end = content.rfind('}') + 1
+                json_str = content[start:end] if start != -1 and end > start else content
+            
+            enhanced_data = json.loads(json_str)
+            print("✅ Successfully enhanced artist information with Gemini!")
+            
+            # Ensure artist name is set
+            enhanced_data["artist_name"] = artist_name
+            return enhanced_data
+            
+        except json.JSONDecodeError as e:
+            print(f"⚠️ JSON parsing error during enhancement: {e}")
+            extracted_data["artist_name"] = artist_name
+            extracted_data["additional_notes"] = "Enhanced with filename-derived artist name (JSON parsing failed)"
+            return extracted_data
+        except Exception as e:
+            print(f"❌ Unexpected error during enhancement: {e}")
+            extracted_data["artist_name"] = artist_name
+            extracted_data["additional_notes"] = "Enhanced with filename-derived artist name (enhancement failed)"
+            return extracted_data
+    
+    
     async def extract_artist_info(self, file: UploadFile, current_user: Dict[str, Any]) -> Dict[str, Any]:
         """
         Extract artist information from uploaded file
@@ -394,8 +457,43 @@ Analyze the text and return ONLY the JSON object:
                     detail="Could not extract meaningful text from the document"
                 )
             
-            # Get artist information using Gemini
+            # Extract artist name from filename as fallback
+            filename_artist_name = self.extract_artist_name_from_filename(filename)
+            print(f"📝 Artist name from filename: {filename_artist_name}")
+            
+            # Step 1: Extract artist name from filename
+            filename_artist_name = self.extract_artist_name_from_filename(filename)
+            print(f"🎯 Artist name from filename: {filename_artist_name}")
+            
+            # Step 2: Get initial artist information using Gemini
             artist_info_raw = await self.extract_artist_info_with_gemini(extracted_text)
+            
+            # Step 3: Check if artist_name is null and enhance with filename
+            if not artist_info_raw.get("artist_name") or artist_info_raw.get("artist_name") in [None, "", "null"]:
+                print(f"🔄 Artist name is null, using filename: {filename_artist_name}")
+                print("🚀 Enhancing extracted data with Gemini using filename-derived artist name...")
+                
+                # Enhance the data with filename-derived artist name
+                artist_info_raw = await self.enhance_artist_info_with_gemini(
+                    artist_info_raw, 
+                    filename_artist_name, 
+                    extracted_text
+                )
+            else:
+                print(f"✅ Artist name found in extraction: {artist_info_raw.get('artist_name')}")
+            
+            # Check if artist_name is null and use filename fallback + enhancement
+            if not artist_info_raw.get('artist_name') or artist_info_raw.get('artist_name') in [None, '', 'null']:
+                print(f"🔄 Artist name is null, using filename fallback: {filename_artist_name}")
+                artist_info_raw['artist_name'] = filename_artist_name
+                
+                # Enhance the data with Gemini using filename artist name
+                enhanced_info = await self.enhance_artist_info_with_gemini(
+                    artist_info_raw, filename_artist_name, extracted_text
+                )
+                if enhanced_info:
+                    artist_info_raw = enhanced_info
+                    print("✅ Artist info enhanced with Gemini using filename artist name")
             
             # Convert to Pydantic model for validation
             try:
@@ -404,6 +502,8 @@ Analyze the text and return ONLY the JSON object:
                 print(f"Validation error: {e}")
                 # If validation fails, store raw data
                 artist_info = ArtistInfo(
+                    artist_name=filename_artist_name,  # Ensure we have at least the filename
+                    artist_name=filename_artist_name,  # Ensure we at least have the filename artist name
                     summary=f"Raw extraction data (validation failed): {str(artist_info_raw)[:500]}..."
                 )
             
@@ -428,6 +528,7 @@ Analyze the text and return ONLY the JSON object:
                 "success": True,
                 "artist_id": artist_id,
                 "filename": filename,
+                "filename_artist_name": filename_artist_name,
                 "extracted_text_length": len(extracted_text),
                 "extracted_text_preview": extracted_text[:200] + "..." if len(extracted_text) > 200 else extracted_text,
                 "extracted_text": extracted_text,
