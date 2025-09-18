@@ -942,12 +942,9 @@ Always output the final enhanced version of the data with perfect formatting and
             # Check if Gemini is available after initialization
             if self.gemini_model is None:
                 print("❌ Gemini model not available")
-                print(f"🔍 Debug - API Key: {settings.GEMINI_API_KEY[:20] if settings.GEMINI_API_KEY else 'None'}...")
-                print(f"🔍 Debug - Model Name: {settings.GEMINI_MODEL_NAME}")
-                print(f"🔍 Debug - Enhancement Enabled: {settings.ENABLE_AI_ENHANCEMENT}")
                 raise HTTPException(
                     status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-                    detail=f"AI enhancement service not available - Gemini API not configured properly. Check API key and model settings."
+                    detail="AI comprehensive enhancement service not available - Gemini API not configured"
                 )
             
             print("✅ Gemini model available, proceeding with comprehensive enhancement...")
