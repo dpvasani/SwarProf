@@ -717,7 +717,7 @@ Always output the final enhanced version of the data with perfect formatting and
                     artist_info_raw, 
                     extracted_text
                 )
-                print("✅ Comprehensive AI enhancement completed successfully")
+                print("✅ Comprehensive AI enhancement completed")
             except Exception as e:
                 print(f"⚠️ Comprehensive enhancement failed: {e}")
                 enhanced_artist_info_raw = artist_info_raw
@@ -958,13 +958,13 @@ Always output the final enhanced version of the data with perfect formatting and
             
             print(f"🔍 Enhancement completed, validating data...")
             
-            # Validate enhanced data
+            # Validate enhanced data with Pydantic
             try:
                 enhanced_artist_info = ArtistInfo(**enhanced_data)
-                print("✅ Enhanced data validation successful")
+                print("✅ Comprehensive enhanced data validation successful")
             except Exception as e:
-                print(f"⚠️ Enhanced data validation error: {e}")
-                # Create enhanced object with existing data as fallback
+                print(f"⚠️ Comprehensive enhanced data validation error: {e}")
+                # Keep original data if validation fails
                 enhanced_artist_info = ArtistInfo(**existing_artist_info)
                 enhanced_artist_info.additional_notes = f"Comprehensive enhancement failed validation: {str(e)}"
             
