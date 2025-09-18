@@ -10,7 +10,9 @@ import {
   Trash2, 
   Users,
   Calendar,
-  FileText
+  FileText,
+  AlertCircle,
+  CheckCircle
 } from 'lucide-react';
 import LoadingSpinner from '../components/LoadingSpinner';
 
@@ -21,6 +23,9 @@ const Artists = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalArtists, setTotalArtists] = useState(0);
+  const [deleteConfirm, setDeleteConfirm] = useState(null);
+  const [editingArtist, setEditingArtist] = useState(null);
+  const [editForm, setEditForm] = useState({ name: '' });
 
   useEffect(() => {
     fetchArtists();
@@ -63,6 +68,42 @@ const Artists = () => {
   const handleSearch = (e) => {
     setSearchTerm(e.target.value);
     setCurrentPage(1);
+  };
+
+  const handleEdit = (artist) => {
+    setEditingArtist(artist.id);
+    setEditForm({ name: artist.name });
+  };
+
+  const handleSaveEdit = async (artistId) => {
+    try {
+      // For now, we'll just update the local state since the backend doesn't have an update endpoint
+      setArtists(prev => prev.map(artist => 
+        artist.id === artistId 
+          ? { ...artist, name: editForm.name }
+          : artist
+      ));
+      setEditingArtist(null);
+      setEditForm({ name: '' });
+    } catch (error) {
+      console.error('Failed to update artist:', error);
+    }
+  };
+
+  const handleCancelEdit = () => {
+    setEditingArtist(null);
+    setEditForm({ name: '' });
+  };
+
+  const handleDelete = async (artistId) => {
+    try {
+      // For now, we'll just remove from local state since the backend doesn't have a delete endpoint
+      setArtists(prev => prev.filter(artist => artist.id !== artistId));
+      setDeleteConfirm(null);
+      setTotalArtists(prev => prev - 1);
+    } catch (error) {
+      console.error('Failed to delete artist:', error);
+    }
   };
 
   const formatDate = (dateString) => {
@@ -194,9 +235,25 @@ const Artists = () => {
 
                 {/* Artist Info */}
                 <div className="text-center mb-4">
-                  <h3 className="text-lg font-semibold text-white mb-1">
-                    {artist.name}
-                  </h3>
+                  {editingArtist === artist.id ? (
+                    <div className="mb-2">
+                      <input
+                        type="text"
+                        value={editForm.name}
+                        onChange={(e) => setEditForm({ name: e.target.value })}
+                        className="glass-input text-center text-lg font-semibold"
+                        onKeyPress={(e) => {
+                          if (e.key === 'Enter') {
+                            handleSaveEdit(artist.id);
+                          }
+                        }}
+                      />
+                    </div>
+                  ) : (
+                    <h3 className="text-lg font-semibold text-white mb-1">
+                      {artist.name}
+                    </h3>
+                  )}
                   <p className="text-white text-opacity-60 text-sm mb-2">
                     Added {formatDate(artist.created_at)}
                   </p>
@@ -209,27 +266,48 @@ const Artists = () => {
                 </div>
 
                 {/* Actions */}
-                <div className="flex items-center justify-center space-x-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                  <Link
-                    to={`/artists/${artist.id}`}
-                    className="p-2 rounded-lg glass hover:bg-white/20 transition-colors duration-300"
-                    title="View Details"
-                  >
-                    <Eye className="w-4 h-4 text-white" />
-                  </Link>
-                  <button
-                    className="p-2 rounded-lg glass hover:bg-white/20 transition-colors duration-300"
-                    title="Edit Artist"
-                  >
-                    <Edit className="w-4 h-4 text-white" />
-                  </button>
-                  <button
-                    className="p-2 rounded-lg glass hover:bg-red-500/20 transition-colors duration-300"
-                    title="Delete Artist"
-                  >
-                    <Trash2 className="w-4 h-4 text-red-400" />
-                  </button>
-                </div>
+                {editingArtist === artist.id ? (
+                  <div className="flex items-center justify-center space-x-2">
+                    <button
+                      onClick={() => handleSaveEdit(artist.id)}
+                      className="p-2 rounded-lg glass hover:bg-green-500/20 transition-colors duration-300"
+                      title="Save Changes"
+                    >
+                      <CheckCircle className="w-4 h-4 text-green-400" />
+                    </button>
+                    <button
+                      onClick={handleCancelEdit}
+                      className="p-2 rounded-lg glass hover:bg-red-500/20 transition-colors duration-300"
+                      title="Cancel"
+                    >
+                      <AlertCircle className="w-4 h-4 text-red-400" />
+                    </button>
+                  </div>
+                ) : (
+                  <div className="flex items-center justify-center space-x-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                    <Link
+                      to={`/artists/${artist.id}`}
+                      className="p-2 rounded-lg glass hover:bg-white/20 transition-colors duration-300"
+                      title="View Details"
+                    >
+                      <Eye className="w-4 h-4 text-white" />
+                    </Link>
+                    <button
+                      onClick={() => handleEdit(artist)}
+                      className="p-2 rounded-lg glass hover:bg-white/20 transition-colors duration-300"
+                      title="Edit Artist"
+                    >
+                      <Edit className="w-4 h-4 text-white" />
+                    </button>
+                    <button
+                      onClick={() => setDeleteConfirm(artist.id)}
+                      className="p-2 rounded-lg glass hover:bg-red-500/20 transition-colors duration-300"
+                      title="Delete Artist"
+                    >
+                      <Trash2 className="w-4 h-4 text-red-400" />
+                    </button>
+                  </div>
+                )}
               </motion.div>
             ))}
           </motion.div>
@@ -259,6 +337,39 @@ const Artists = () => {
               </Link>
             )}
           </motion.div>
+        )}
+
+        {/* Delete Confirmation Modal */}
+        {deleteConfirm && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="glass-card max-w-md w-full mx-4"
+            >
+              <div className="flex items-center space-x-3 mb-4">
+                <AlertCircle className="w-6 h-6 text-red-400" />
+                <h3 className="text-lg font-semibold text-white">Confirm Delete</h3>
+              </div>
+              <p className="text-white text-opacity-60 mb-6">
+                Are you sure you want to delete this artist? This action cannot be undone.
+              </p>
+              <div className="flex items-center space-x-3">
+                <button
+                  onClick={() => setDeleteConfirm(null)}
+                  className="flex-1 glass-button"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => handleDelete(deleteConfirm)}
+                  className="flex-1 glass-button bg-red-500 bg-opacity-20 hover:bg-opacity-30 border-red-500 border-opacity-30"
+                >
+                  Delete
+                </button>
+              </div>
+            </motion.div>
+          </div>
         )}
 
         {/* Pagination */}

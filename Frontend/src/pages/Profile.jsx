@@ -10,8 +10,6 @@ import {
   X, 
   Camera,
   Shield,
-  Bell,
-  Download,
   Trash2
 } from 'lucide-react';
 import LoadingSpinner from '../components/LoadingSpinner';
@@ -85,24 +83,6 @@ const Profile = () => {
         { label: 'Change Password', action: () => {}, disabled: true },
         { label: 'Two-Factor Authentication', action: () => {}, disabled: true },
         { label: 'Login Sessions', action: () => {}, disabled: true },
-      ],
-    },
-    {
-      title: 'Notifications',
-      icon: Bell,
-      items: [
-        { label: 'Email Notifications', action: () => {}, disabled: true },
-        { label: 'Push Notifications', action: () => {}, disabled: true },
-        { label: 'Weekly Reports', action: () => {}, disabled: true },
-      ],
-    },
-    {
-      title: 'Data & Privacy',
-      icon: Download,
-      items: [
-        { label: 'Export Data', action: () => {}, disabled: true },
-        { label: 'Privacy Settings', action: () => {}, disabled: true },
-        { label: 'Data Usage', action: () => {}, disabled: true },
       ],
     },
   ];
@@ -368,24 +348,9 @@ const Profile = () => {
             >
               <h3 className="text-lg font-semibold text-white mb-4">Quick Actions</h3>
               <div className="space-y-2">
-                <button
-                  disabled
-                  className="w-full glass-button text-sm disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  Download My Data
-                </button>
-                <button
-                  disabled
-                  className="w-full glass-button text-sm disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  Export Artists
-                </button>
-                <button
-                  disabled
-                  className="w-full glass-button text-sm disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  Account Backup
-                </button>
+                <p className="text-white text-opacity-60 text-sm text-center py-4">
+                  Additional features coming soon
+                </p>
               </div>
             </motion.div>
           </div>

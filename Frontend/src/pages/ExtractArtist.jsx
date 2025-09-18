@@ -1,6 +1,7 @@
 import React, { useState, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { useDropzone } from 'react-dropzone';
+import { Link } from 'react-router-dom';
 import { artistAPI } from '../services/api';
 import { 
   Upload, 
@@ -11,7 +12,10 @@ import {
   CheckCircle, 
   AlertCircle,
   Download,
-  Eye
+  Eye,
+  Edit,
+  Save,
+  Copy
 } from 'lucide-react';
 import LoadingSpinner from '../components/LoadingSpinner';
 
@@ -20,6 +24,9 @@ const ExtractArtist = () => {
   const [uploading, setUploading] = useState(false);
   const [results, setResults] = useState([]);
   const [error, setError] = useState('');
+  const [viewingResult, setViewingResult] = useState(null);
+  const [editingArtist, setEditingArtist] = useState(null);
+  const [editForm, setEditForm] = useState({});
 
   const onDrop = useCallback((acceptedFiles) => {
     const newFiles = acceptedFiles.map(file => ({
@@ -119,6 +126,54 @@ const ExtractArtist = () => {
     const sizes = ['Bytes', 'KB', 'MB', 'GB'];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  };
+
+  const handleViewResult = (result) => {
+    setViewingResult(result);
+  };
+
+  const handleEditArtist = (artist, resultIndex, artistIndex) => {
+    setEditingArtist({ resultIndex, artistIndex });
+    setEditForm({ ...artist });
+  };
+
+  const handleSaveEdit = () => {
+    const { resultIndex, artistIndex } = editingArtist;
+    setResults(prev => prev.map((result, rIndex) => {
+      if (rIndex === resultIndex) {
+        return {
+          ...result,
+          artists: result.artists.map((artist, aIndex) => 
+            aIndex === artistIndex ? { ...artist, ...editForm } : artist
+          )
+        };
+      }
+      return result;
+    }));
+    setEditingArtist(null);
+    setEditForm({});
+  };
+
+  const handleCancelEdit = () => {
+    setEditingArtist(null);
+    setEditForm({});
+  };
+
+  const handleExportResult = (result) => {
+    const dataStr = JSON.stringify(result, null, 2);
+    const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+    
+    const exportFileDefaultName = `${result.filename}_extraction.json`;
+    
+    const linkElement = document.createElement('a');
+    linkElement.setAttribute('href', dataUri);
+    linkElement.setAttribute('download', exportFileDefaultName);
+    linkElement.click();
+  };
+
+  const copyToClipboard = (text) => {
+    navigator.clipboard.writeText(text);
+    // You could add a toast notification here
   };
 
   return (
@@ -279,10 +334,13 @@ const ExtractArtist = () => {
                   <h4 className="text-lg font-semibold text-white">{result.filename}</h4>
                   <div className="flex items-center space-x-2">
                     <button className="glass-button text-sm flex items-center space-x-1">
+                      onClick={() => handleViewResult(result)}
                       <Eye className="w-4 h-4" />
                       <span>View</span>
                     </button>
-                    <button className="glass-button text-sm flex items-center space-x-1">
+                    <button 
+                      onClick={() => handleExportResult(result)}
+                      className="glass-button text-sm flex items-center space-x-1">
                       <Download className="w-4 h-4" />
                       <span>Export</span>
                     </button>
@@ -300,13 +358,252 @@ const ExtractArtist = () => {
                       <div className="space-y-2">
                         {result.artists.map((artist, artistIndex) => (
                           <div key={artistIndex} className="p-3 rounded-lg glass">
-                            <p className="text-white font-medium">{artist.artist_name || 'Unknown Artist'}</p>
-                            {artist.summary && (
-                              <p className="text-white text-opacity-60 text-sm mt-1">
-                                {artist.summary.substring(0, 100)}...
-                              </p>
+                            <div className="flex items-center justify-between">
+                              <div className="flex-1">
+                                <p className="text-white font-medium">{artist.artist_name || 'Unknown Artist'}</p>
+                                {artist.summary && (
+                                  <p className="text-white text-opacity-60 text-sm mt-1">
+                                    {artist.summary.substring(0, 100)}...
+                                  </p>
+                                )}
+                              </div>
+                              <button
+                                onClick={() => handleEditArtist(artist, index, artistIndex)}
+                                className="p-1 hover:bg-white/10 rounded transition-colors duration-300"
+                                title="Edit Artist"
+                              >
+                                <Edit className="w-4 h-4 text-white text-opacity-60" />
+                              </button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-white text-opacity-60 text-sm">No artists found in this document</p>
+                    )}
+                  </div>
+
+                  {/* Extracted Text Preview */}
+                  <div>
+                    <h5 className="text-white font-medium mb-3">Text Preview</h5>
+                    <div className="p-3 rounded-lg glass max-h-40 overflow-y-auto">
+                      <p className="text-white text-opacity-60 text-sm whitespace-pre-wrap">
+                        {result.extractedText.substring(0, 300)}
+                        {result.extractedText.length > 300 && '...'}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </motion.div>
+        )}
+
+        {/* View Result Modal */}
+        {viewingResult && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="glass-card max-w-4xl w-full max-h-[90vh] overflow-y-auto"
+            >
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-xl font-semibold text-white">Extraction Details</h3>
+                <button
+                  onClick={() => setViewingResult(null)}
+                  className="p-2 hover:bg-white/10 rounded-lg transition-colors duration-300"
+                >
+                  <X className="w-5 h-5 text-white" />
+                </button>
+              </div>
+
+              <div className="space-y-6">
+                <div>
+                  <h4 className="text-lg font-semibold text-white mb-3">File: {viewingResult.filename}</h4>
+                </div>
+
+                {/* Artists Found */}
+                <div>
+                  <h5 className="text-white font-medium mb-3">Artists Found ({viewingResult.artists.length})</h5>
+                  {viewingResult.artists.length > 0 ? (
+                    <div className="space-y-4">
+                      {viewingResult.artists.map((artist, artistIndex) => (
+                        <div key={artistIndex} className="p-4 rounded-lg glass">
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                              <p className="text-white text-opacity-60 text-sm">Artist Name</p>
+                              <p className="text-white font-medium">{artist.artist_name || 'Unknown'}</p>
+                            </div>
+                            {artist.guru_name && (
+                              <div>
+                                <p className="text-white text-opacity-60 text-sm">Guru Name</p>
+                                <p className="text-white font-medium">{artist.guru_name}</p>
+                              </div>
+                            )}
+                            {artist.gharana_details?.gharana_name && (
+                              <div>
+                                <p className="text-white text-opacity-60 text-sm">Gharana</p>
+                                <p className="text-white font-medium">{artist.gharana_details.gharana_name}</p>
+                              </div>
+                            )}
+                            {artist.extraction_confidence && (
+                              <div>
+                                <p className="text-white text-opacity-60 text-sm">Confidence</p>
+                                <p className="text-white font-medium">{artist.extraction_confidence}</p>
+                              </div>
                             )}
                           </div>
+                          {artist.summary && (
+                            <div className="mt-4">
+                              <p className="text-white text-opacity-60 text-sm">Summary</p>
+                              <p className="text-white text-opacity-80 text-sm mt-1">{artist.summary}</p>
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-white text-opacity-60 text-sm">No artists found in this document</p>
+                  )}
+                </div>
+
+                {/* Full Extracted Text */}
+                <div>
+                  <div className="flex items-center justify-between mb-3">
+                    <h5 className="text-white font-medium">Extracted Text</h5>
+                    <button
+                      onClick={() => copyToClipboard(viewingResult.extractedText)}
+                      className="glass-button text-sm flex items-center space-x-1"
+                    >
+                      <Copy className="w-4 h-4" />
+                      <span>Copy</span>
+                    </button>
+                  </div>
+                  <div className="p-4 rounded-lg glass max-h-60 overflow-y-auto">
+                    <p className="text-white text-opacity-60 text-sm whitespace-pre-wrap">
+                      {viewingResult.extractedText}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+
+        {/* Edit Artist Modal */}
+        {editingArtist && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="glass-card max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+            >
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-xl font-semibold text-white">Edit Artist Information</h3>
+                <button
+                  onClick={handleCancelEdit}
+                  className="p-2 hover:bg-white/10 rounded-lg transition-colors duration-300"
+                >
+                  <X className="w-5 h-5 text-white" />
+                </button>
+              </div>
+
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-white text-opacity-80 mb-2">
+                    Artist Name
+                  </label>
+                  <input
+                    type="text"
+                    value={editForm.artist_name || ''}
+                    onChange={(e) => setEditForm(prev => ({ ...prev, artist_name: e.target.value }))}
+                    className="glass-input w-full"
+                    placeholder="Enter artist name"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-white text-opacity-80 mb-2">
+                    Guru Name
+                  </label>
+                  <input
+                    type="text"
+                    value={editForm.guru_name || ''}
+                    onChange={(e) => setEditForm(prev => ({ ...prev, guru_name: e.target.value }))}
+                    className="glass-input w-full"
+                    placeholder="Enter guru name"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-white text-opacity-80 mb-2">
+                    Summary
+                  </label>
+                  <textarea
+                    value={editForm.summary || ''}
+                    onChange={(e) => setEditForm(prev => ({ ...prev, summary: e.target.value }))}
+                    className="glass-input w-full h-32 resize-none"
+                    placeholder="Enter summary"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-white text-opacity-80 mb-2">
+                    Extraction Confidence
+                  </label>
+                  <select
+                    value={editForm.extraction_confidence || ''}
+                    onChange={(e) => setEditForm(prev => ({ ...prev, extraction_confidence: e.target.value }))}
+                    className="glass-input w-full"
+                  >
+                    <option value="">Select confidence level</option>
+                    <option value="high">High</option>
+                    <option value="medium">Medium</option>
+                    <option value="low">Low</option>
+                  </select>
+                </div>
+
+                <div className="flex items-center space-x-3 pt-4">
+                  <button
+                    onClick={handleCancelEdit}
+                    className="flex-1 glass-button"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleSaveEdit}
+                    className="flex-1 glass-button bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 flex items-center justify-center space-x-2"
+                  >
+                    <Save className="w-4 h-4" />
+                    <span>Save Changes</span>
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+
+        {/* Empty State */}
+        {files.length === 0 && results.length === 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+            className="text-center py-12"
+          >
+            <Upload className="w-24 h-24 text-white text-opacity-40 mx-auto mb-6" />
+            <h3 className="text-xl font-semibold text-white mb-2">No files uploaded yet</h3>
+            <p className="text-white text-opacity-60">
+              Upload your first document to start extracting artist information
+            </p>
+          </motion.div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+export default ExtractArtist;
                         ))}
                       </div>
                     ) : (
