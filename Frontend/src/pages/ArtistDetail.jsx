@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { useParams, Link } from 'react-router-dom';
 import { artistAPI } from '../services/api';
 import { 
   ArrowLeft, 
@@ -8,7 +7,6 @@ import {
   Trash2, 
   Calendar, 
   FileText, 
-  ExternalLink,
   Copy,
   Download,
   Share
@@ -17,7 +15,7 @@ import LoadingSpinner from '../components/LoadingSpinner';
 
 const ArtistDetail = () => {
   const { id } = useParams();
-  const navigate = useNavigate();
+  // navigate removed (unused)
   const [artist, setArtist] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -77,6 +75,29 @@ const ArtistDetail = () => {
     // You could add a toast notification here
   };
 
+  // Normalize and compute confidence display values
+  const getConfidenceInfo = (raw) => {
+    if (!raw && raw !== 0) return { level: null, percent: 0, label: 'Unknown' };
+    const str = String(raw).toLowerCase();
+    if (str === 'high' || str === 'h') return { level: 'high', percent: 90, label: 'High' };
+    if (str === 'medium' || str === 'med' || str === 'm') return { level: 'medium', percent: 60, label: 'Medium' };
+    if (str === 'low' || str === 'l') return { level: 'low', percent: 30, label: 'Low' };
+    // If numeric (0-1 or 0-100)
+    const n = Number(raw);
+    if (!Number.isNaN(n)) {
+      let percent;
+      if (n > 0 && n <= 1) percent = Math.round(n * 100);
+      else percent = Math.min(100, Math.round(n));
+      let level;
+      if (percent >= 80) level = 'high';
+      else if (percent >= 50) level = 'medium';
+      else level = 'low';
+      const label = level.charAt(0).toUpperCase() + level.slice(1);
+      return { level, percent, label };
+    }
+    return { level: 'unknown', percent: 0, label: String(raw) };
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -100,11 +121,22 @@ const ArtistDetail = () => {
     );
   }
 
+  // Precompute confidence info to simplify JSX and avoid nested ternaries
+  const confidenceRaw = artist.artist_info?.extraction_confidence;
+  const confidenceInfo = getConfidenceInfo(confidenceRaw);
+  let confidenceColorClass = 'from-red-400 to-red-600';
+  if (confidenceInfo.level === 'high') confidenceColorClass = 'from-green-400 to-green-600';
+  else if (confidenceInfo.level === 'medium') confidenceColorClass = 'from-yellow-400 to-yellow-600';
+
+  // Precompute confidence label to avoid inline ternaries in JSX
+  let confidenceLabel = confidenceInfo.label;
+  if (confidenceInfo.percent) confidenceLabel = `${confidenceInfo.label} • ${confidenceInfo.percent}%`;
+
   return (
     <div className="min-h-screen px-4 py-8">
       <div className="max-w-4xl mx-auto">
         {/* Header */}
-        <motion.div
+        <div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
@@ -150,7 +182,7 @@ const ArtistDetail = () => {
               </button>
             </div>
           </div>
-        </motion.div>
+  </div>
 
         {/* Artist Information */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -158,7 +190,7 @@ const ArtistDetail = () => {
           <div className="lg:col-span-2 space-y-6">
             {/* Biography */}
             {artist.bio && (
-              <motion.div
+              <div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: 0.1 }}
@@ -177,11 +209,11 @@ const ArtistDetail = () => {
                 <p className="text-white text-opacity-80 leading-relaxed whitespace-pre-wrap">
                   {artist.bio}
                 </p>
-              </motion.div>
+              </div>
             )}
 
             {/* Additional Information */}
-            <motion.div
+            <div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.2 }}
@@ -247,19 +279,21 @@ const ArtistDetail = () => {
                 )}
 
                 {/* Extraction Confidence */}
-                {artist.artist_info?.extraction_confidence && (
-                  <div className="p-4 rounded-lg glass">
-                    <p className="text-white text-opacity-60 text-sm">Extraction Confidence</p>
-                    <div className="flex items-center space-x-2">
-                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                        artist.artist_info.extraction_confidence === 'high' 
-                          ? 'bg-green-500 bg-opacity-20 text-green-400'
-                          : artist.artist_info.extraction_confidence === 'medium'
-                          ? 'bg-yellow-500 bg-opacity-20 text-yellow-400'
-                          : 'bg-red-500 bg-opacity-20 text-red-400'
-                      }`}>
-                        {artist.artist_info.extraction_confidence.toUpperCase()}
-                      </span>
+                {artist.artist_info?.extraction_confidence !== undefined && (
+                  <div className="p-4 rounded-lg glass flex flex-col">
+                    <div className="flex items-center justify-between mb-3">
+                      <div>
+                        <p className="text-white text-opacity-60 text-sm">Extraction Confidence</p>
+                        <p className="text-white font-semibold text-lg">{confidenceLabel}</p>
+                      </div>
+                      <div className="flex items-center space-x-3">
+                        <div className={`w-10 h-10 rounded-full bg-gradient-to-br ${confidenceColorClass} flex items-center justify-center shadow-md`}> 
+                          <span className="text-white font-bold text-sm">{confidenceInfo.label.charAt(0)}</span>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="w-full bg-white bg-opacity-10 rounded-full h-3 overflow-hidden">
+                      <div className={`h-3 rounded-full bg-gradient-to-r ${confidenceColorClass}`} style={{ width: `${confidenceInfo.percent}%` }} />
                     </div>
                   </div>
                 )}
@@ -272,11 +306,11 @@ const ArtistDetail = () => {
                   </div>
                 )}
               </div>
-            </motion.div>
+            </div>
 
             {/* Achievements */}
             {artist.artist_info?.achievements && artist.artist_info.achievements.length > 0 && (
-              <motion.div
+              <div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: 0.15 }}
@@ -287,7 +321,7 @@ const ArtistDetail = () => {
                 </div>
                 <div className="space-y-3">
                   {artist.artist_info.achievements.map((ach, idx) => (
-                    <div key={idx} className="p-4 rounded-lg glass">
+                    <div key={ach?.id || ach?._id || idx} className="p-4 rounded-lg glass">
                       <div className="flex items-start justify-between">
                         <div className="flex-1">
                           <h4 className="text-white font-medium">
@@ -309,7 +343,7 @@ const ArtistDetail = () => {
                     </div>
                   ))}
                 </div>
-              </motion.div>
+              </div>
             )}
 
           </div>
@@ -317,7 +351,7 @@ const ArtistDetail = () => {
           {/* Sidebar */}
           <div className="space-y-6">
             {/* Quick Actions */}
-            <motion.div
+            <div
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.6, delay: 0.1 }}
@@ -338,10 +372,10 @@ const ArtistDetail = () => {
                   <span>Share Artist</span>
                 </button>
               </div>
-            </motion.div>
+            </div>
 
             {/* Contact Details */}
-            <motion.div
+            <div
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.6, delay: 0.25 }}
@@ -351,41 +385,50 @@ const ArtistDetail = () => {
               <div className="space-y-4 text-white text-opacity-80">
                 {/* Phones */}
                 {artist.artist_info?.contact_details?.contact_info?.phone_numbers && (
-                  <div>
-                    <p className="text-white text-opacity-60 text-sm">Phone</p>
-                    <div className="flex flex-col mt-1">
+                  <div className="border-b border-white border-opacity-10 pb-3">
+                    <p className="text-white text-opacity-60 text-sm mb-1">Phone</p>
+                    <ul className="flex flex-col gap-2">
                       {artist.artist_info.contact_details.contact_info.phone_numbers.map((p, i) => (
-                        <a key={i} href={`tel:${p}`} className="text-white text-sm hover:underline">{p}</a>
+                        <li key={p || i} className="flex items-center justify-between">
+                          <a href={`tel:${p}`} className="text-white text-sm hover:underline">{p}</a>
+                          <button onClick={() => copyToClipboard(p)} className="text-white text-opacity-60 text-xs hover:text-opacity-80">Copy</button>
+                        </li>
                       ))}
-                    </div>
+                    </ul>
                   </div>
                 )}
 
                 {/* Emails */}
                 {artist.artist_info?.contact_details?.contact_info?.emails && (
-                  <div>
-                    <p className="text-white text-opacity-60 text-sm">Email</p>
-                    <div className="flex flex-col mt-1">
+                  <div className="border-b border-white border-opacity-10 pb-3">
+                    <p className="text-white text-opacity-60 text-sm mb-1">Email</p>
+                    <ul className="flex flex-col gap-2">
                       {artist.artist_info.contact_details.contact_info.emails.map((e, i) => (
-                        <a key={i} href={`mailto:${e}`} className="text-white text-sm hover:underline">{e}</a>
+                        <li key={e || i} className="flex items-center justify-between">
+                          <a href={`mailto:${e}`} className="text-white text-sm hover:underline break-words">{e}</a>
+                          <button onClick={() => copyToClipboard(e)} className="text-white text-opacity-60 text-xs hover:text-opacity-80">Copy</button>
+                        </li>
                       ))}
-                    </div>
+                    </ul>
                   </div>
                 )}
 
                 {/* Website */}
                 {artist.artist_info?.contact_details?.contact_info?.website && (
-                  <div>
-                    <p className="text-white text-opacity-60 text-sm">Website</p>
-                    <a href={artist.artist_info.contact_details.contact_info.website} target="_blank" rel="noopener noreferrer" className="text-white text-sm hover:underline">{artist.artist_info.contact_details.contact_info.website}</a>
+                  <div className="border-b border-white border-opacity-10 pb-3">
+                    <p className="text-white text-opacity-60 text-sm mb-1">Website</p>
+                    <div className="flex items-center justify-between">
+                      <a href={artist.artist_info.contact_details.contact_info.website} target="_blank" rel="noopener noreferrer" className="text-white text-sm hover:underline break-words">{artist.artist_info.contact_details.contact_info.website}</a>
+                      <button onClick={() => copyToClipboard(artist.artist_info.contact_details.contact_info.website)} className="text-white text-opacity-60 text-xs hover:text-opacity-80">Copy</button>
+                    </div>
                   </div>
                 )}
 
                 {/* Address */}
                 {artist.artist_info?.contact_details?.address?.full_address && (
-                  <div>
-                    <p className="text-white text-opacity-60 text-sm">Address</p>
-                    <p className="text-white text-sm">{artist.artist_info.contact_details.address.full_address}</p>
+                  <div className="border-b border-white border-opacity-10 pb-3">
+                    <p className="text-white text-opacity-60 text-sm mb-1">Address</p>
+                    <p className="text-white text-sm break-words">{artist.artist_info.contact_details.address.full_address}</p>
                   </div>
                 )}
 
@@ -393,15 +436,26 @@ const ArtistDetail = () => {
                 {artist.artist_info?.contact_details?.social_media && (
                   <div>
                     <p className="text-white text-opacity-60 text-sm mb-2">Social Media</p>
-                    <div className="flex flex-wrap gap-3 mt-2">
+                    <div className="flex flex-col gap-2">
                       {Object.entries(artist.artist_info.contact_details.social_media).map(([k, v]) => {
                         if (!v) return null;
-                        // If v looks like a handle (starts with @), show as text; otherwise link
-                        const href = v.startsWith('http') ? v : (v.startsWith('@') ? null : `https://${v}`);
+                        const displayPlatform = k.charAt(0).toUpperCase() + k.slice(1);
+                        let href = null;
+                        if (v.startsWith('http')) href = v;
+                        else if (!v.startsWith('@')) href = `https://${v}`;
                         return (
-                          <a key={k} href={href || '#'} onClick={e => { if(!href) e.preventDefault(); }} className="px-2 py-1 bg-white bg-opacity-10 rounded-full text-white text-sm hover:underline">
-                            {k.charAt(0).toUpperCase() + k.slice(1)}: {v}
-                          </a>
+                          <div key={k} className="flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                              <span className="text-white text-sm font-medium">{displayPlatform}:</span>
+                              <a href={href || '#'} onClick={e => { if(!href) e.preventDefault(); }} className="text-white text-sm hover:underline break-words">{v}</a>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              {href && (
+                                <a href={href} target="_blank" rel="noopener noreferrer" className="text-white text-opacity-60 text-xs hover:text-opacity-80">Open</a>
+                              )}
+                              <button onClick={() => copyToClipboard(v)} className="text-white text-opacity-60 text-xs hover:text-opacity-80">Copy</button>
+                            </div>
+                          </div>
                         );
                       })}
                     </div>
@@ -421,10 +475,10 @@ const ArtistDetail = () => {
                   </div>
                 )}
               </div>
-            </motion.div>
+            </div>
 
             {/* Metadata */}
-            <motion.div
+            <div
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.6, delay: 0.2 }}
@@ -454,11 +508,11 @@ const ArtistDetail = () => {
                   </div>
                 </div>
               </div>
-            </motion.div>
+            </div>
 
             {/* Extracted Text Preview */}
             {artist.extracted_text && (
-              <motion.div
+              <div
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.6, delay: 0.35 }}
@@ -479,11 +533,11 @@ const ArtistDetail = () => {
                     {artist.extracted_text}
                   </p>
                 </div>
-              </motion.div>
+              </div>
             )}
 
             {/* Enhancement Button */}
-            <motion.div
+            <div
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.6, delay: 0.4 }}
@@ -499,20 +553,7 @@ const ArtistDetail = () => {
               >
                 <span>Enhance with AI</span>
               </button>
-            </motion.div>
-
-            {/* Related Artists */}
-            <motion.div
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.6, delay: 0.45 }}
-              className="glass-card"
-            >
-              <h3 className="text-lg font-semibold text-white mb-4">Similar Artists</h3>
-              <p className="text-white text-opacity-60 text-sm">
-                Feature coming soon - AI-powered artist recommendations based on style and movement.
-              </p>
-            </motion.div>
+            </div>
           </div>
         </div>
       </div>
