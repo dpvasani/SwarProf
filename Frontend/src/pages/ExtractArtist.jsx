@@ -333,8 +333,9 @@ const ExtractArtist = () => {
                 <div className="flex items-center justify-between mb-4">
                   <h4 className="text-lg font-semibold text-white">{result.filename}</h4>
                   <div className="flex items-center space-x-2">
-                    <button className="glass-button text-sm flex items-center space-x-1">
+                    <button 
                       onClick={() => handleViewResult(result)}
+                      className="glass-button text-sm flex items-center space-x-1">
                       <Eye className="w-4 h-4" />
                       <span>View</span>
                     </button>
@@ -581,50 +582,6 @@ const ExtractArtist = () => {
               </div>
             </motion.div>
           </div>
-        )}
-
-        {/* Empty State */}
-        {files.length === 0 && results.length === 0 && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.2 }}
-            className="text-center py-12"
-          >
-            <Upload className="w-24 h-24 text-white text-opacity-40 mx-auto mb-6" />
-            <h3 className="text-xl font-semibold text-white mb-2">No files uploaded yet</h3>
-            <p className="text-white text-opacity-60">
-              Upload your first document to start extracting artist information
-            </p>
-          </motion.div>
-        )}
-      </div>
-    </div>
-  );
-};
-
-export default ExtractArtist;
-                        ))}
-                      </div>
-                    ) : (
-                      <p className="text-white text-opacity-60 text-sm">No artists found in this document</p>
-                    )}
-                  </div>
-
-                  {/* Extracted Text Preview */}
-                  <div>
-                    <h5 className="text-white font-medium mb-3">Text Preview</h5>
-                    <div className="p-3 rounded-lg glass max-h-40 overflow-y-auto">
-                      <p className="text-white text-opacity-60 text-sm whitespace-pre-wrap">
-                        {result.extractedText.substring(0, 300)}
-                        {result.extractedText.length > 300 && '...'}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </motion.div>
         )}
 
         {/* Empty State */}
