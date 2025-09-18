@@ -233,8 +233,6 @@ const ArtistDetail = () => {
                 {/* Education */}
                 {artist.artist_info?.biography?.education && (
                   <div className="p-4 rounded-lg glass">
-                    <p className="text-white text-opacity-60 text-sm">Movements</p>
-                    <div className="flex flex-wrap gap-2 mt-1">
                     <p className="text-white text-opacity-60 text-sm">Education</p>
                     <p className="text-white font-medium">{artist.artist_info.biography.education}</p>
                   </div>
@@ -325,89 +323,6 @@ const ArtistDetail = () => {
               transition={{ duration: 0.6, delay: 0.1 }}
               className="glass-card"
             >
-
-            {/* Contact Details */}
-                            <motion.div
-                              initial={{ opacity: 0, x: 20 }}
-                              animate={{ opacity: 1, x: 0 }}
-                              transition={{ duration: 0.6, delay: 0.25 }}
-                              className="glass-card"
-                            >
-                              <h3 className="text-lg font-semibold text-white mb-4">Contact Details</h3>
-                              <div className="space-y-4 text-white text-opacity-80">
-                                {/* Phones */}
-                                {artist.artist_info?.contact_details?.contact_info?.phone_numbers && (
-                                  <div>
-                                    <p className="text-white text-opacity-60 text-sm">Phone</p>
-                                    <div className="flex flex-col mt-1">
-                                      {artist.artist_info.contact_details.contact_info.phone_numbers.map((p, i) => (
-                                        <a key={i} href={`tel:${p}`} className="text-white text-sm hover:underline">{p}</a>
-                                      ))}
-                                    </div>
-                                  </div>
-                                )}
-
-                                {/* Emails */}
-                                {artist.artist_info?.contact_details?.contact_info?.emails && (
-                                  <div>
-                                    <p className="text-white text-opacity-60 text-sm">Email</p>
-                                    <div className="flex flex-col mt-1">
-                                      {artist.artist_info.contact_details.contact_info.emails.map((e, i) => (
-                                        <a key={i} href={`mailto:${e}`} className="text-white text-sm hover:underline">{e}</a>
-                                      ))}
-                                    </div>
-                                  </div>
-                                )}
-
-                                {/* Website */}
-                                {artist.artist_info?.contact_details?.contact_info?.website && (
-                                  <div>
-                                    <p className="text-white text-opacity-60 text-sm">Website</p>
-                                    <a href={artist.artist_info.contact_details.contact_info.website} target="_blank" rel="noopener noreferrer" className="text-white text-sm hover:underline">{artist.artist_info.contact_details.contact_info.website}</a>
-                                  </div>
-                                )}
-
-                                {/* Address */}
-                                {artist.artist_info?.contact_details?.address?.full_address && (
-                                  <div>
-                                    <p className="text-white text-opacity-60 text-sm">Address</p>
-                                    <p className="text-white text-sm">{artist.artist_info.contact_details.address.full_address}</p>
-                                  </div>
-                                )}
-
-                                {/* Social Media */}
-                                {artist.artist_info?.contact_details?.social_media && (
-                                  <div>
-                                    <p className="text-white text-opacity-60 text-sm mb-2">Social Media</p>
-                                    <div className="flex flex-wrap gap-3 mt-2">
-                                      {Object.entries(artist.artist_info.contact_details.social_media).map(([k, v]) => {
-                                        if (!v) return null;
-                                        // If v looks like a handle (starts with @), show as text; otherwise link
-                                        const href = v.startsWith('http') ? v : (v.startsWith('@') ? null : `https://${v}`);
-                                        return (
-                                          <a key={k} href={href || '#'} onClick={e => { if(!href) e.preventDefault(); }} className="px-2 py-1 bg-white bg-opacity-10 rounded-full text-white text-sm hover:underline">
-                                            {k.charAt(0).toUpperCase() + k.slice(1)}: {v}
-                                          </a>
-                                        );
-                                      })}
-                                    </div>
-                                  </div>
-                                )}
-
-                                {/* Show message if no contact details */}
-                                {!artist.artist_info?.contact_details?.contact_info?.phone_numbers &&
-                                 !artist.artist_info?.contact_details?.contact_info?.emails &&
-                                 !artist.artist_info?.contact_details?.contact_info?.website &&
-                                 !artist.artist_info?.contact_details?.address?.full_address &&
-                                 !artist.artist_info?.contact_details?.social_media && (
-                                  <div className="text-center py-4">
-                                    <p className="text-white text-opacity-60 text-sm">
-                                      No contact details found in the extracted data
-                                    </p>
-                                  </div>
-                                )}
-                              </div>
-                            </motion.div>
               <h3 className="text-lg font-semibold text-white mb-4">Quick Actions</h3>
               <div className="space-y-2">
                 <button className="w-full glass-button flex items-center justify-center space-x-2">
@@ -422,6 +337,89 @@ const ArtistDetail = () => {
                   <Share className="w-4 h-4" />
                   <span>Share Artist</span>
                 </button>
+              </div>
+            </motion.div>
+
+            {/* Contact Details */}
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.6, delay: 0.25 }}
+              className="glass-card"
+            >
+              <h3 className="text-lg font-semibold text-white mb-4">Contact Details</h3>
+              <div className="space-y-4 text-white text-opacity-80">
+                {/* Phones */}
+                {artist.artist_info?.contact_details?.contact_info?.phone_numbers && (
+                  <div>
+                    <p className="text-white text-opacity-60 text-sm">Phone</p>
+                    <div className="flex flex-col mt-1">
+                      {artist.artist_info.contact_details.contact_info.phone_numbers.map((p, i) => (
+                        <a key={i} href={`tel:${p}`} className="text-white text-sm hover:underline">{p}</a>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Emails */}
+                {artist.artist_info?.contact_details?.contact_info?.emails && (
+                  <div>
+                    <p className="text-white text-opacity-60 text-sm">Email</p>
+                    <div className="flex flex-col mt-1">
+                      {artist.artist_info.contact_details.contact_info.emails.map((e, i) => (
+                        <a key={i} href={`mailto:${e}`} className="text-white text-sm hover:underline">{e}</a>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Website */}
+                {artist.artist_info?.contact_details?.contact_info?.website && (
+                  <div>
+                    <p className="text-white text-opacity-60 text-sm">Website</p>
+                    <a href={artist.artist_info.contact_details.contact_info.website} target="_blank" rel="noopener noreferrer" className="text-white text-sm hover:underline">{artist.artist_info.contact_details.contact_info.website}</a>
+                  </div>
+                )}
+
+                {/* Address */}
+                {artist.artist_info?.contact_details?.address?.full_address && (
+                  <div>
+                    <p className="text-white text-opacity-60 text-sm">Address</p>
+                    <p className="text-white text-sm">{artist.artist_info.contact_details.address.full_address}</p>
+                  </div>
+                )}
+
+                {/* Social Media */}
+                {artist.artist_info?.contact_details?.social_media && (
+                  <div>
+                    <p className="text-white text-opacity-60 text-sm mb-2">Social Media</p>
+                    <div className="flex flex-wrap gap-3 mt-2">
+                      {Object.entries(artist.artist_info.contact_details.social_media).map(([k, v]) => {
+                        if (!v) return null;
+                        // If v looks like a handle (starts with @), show as text; otherwise link
+                        const href = v.startsWith('http') ? v : (v.startsWith('@') ? null : `https://${v}`);
+                        return (
+                          <a key={k} href={href || '#'} onClick={e => { if(!href) e.preventDefault(); }} className="px-2 py-1 bg-white bg-opacity-10 rounded-full text-white text-sm hover:underline">
+                            {k.charAt(0).toUpperCase() + k.slice(1)}: {v}
+                          </a>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                {/* Show message if no contact details */}
+                {!artist.artist_info?.contact_details?.contact_info?.phone_numbers &&
+                 !artist.artist_info?.contact_details?.contact_info?.emails &&
+                 !artist.artist_info?.contact_details?.contact_info?.website &&
+                 !artist.artist_info?.contact_details?.address?.full_address &&
+                 !artist.artist_info?.contact_details?.social_media && (
+                  <div className="text-center py-4">
+                    <p className="text-white text-opacity-60 text-sm">
+                      No contact details found in the extracted data
+                    </p>
+                  </div>
+                )}
               </div>
             </motion.div>
 
