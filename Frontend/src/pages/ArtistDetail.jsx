@@ -190,69 +190,94 @@ const ArtistDetail = () => {
               <h2 className="text-xl font-semibold text-white mb-4">Additional Information</h2>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {/* Birth Date */}
-                {artist.birth_date && (
+                {/* Guru Name */}
+                {artist.artist_info?.guru_name && (
                   <div className="p-4 rounded-lg glass">
-                    <p className="text-white text-opacity-60 text-sm">Birth Date</p>
-                    <p className="text-white font-medium">{formatDate(artist.birth_date)}</p>
+                    <p className="text-white text-opacity-60 text-sm">Guru/Teacher</p>
+                    <p className="text-white font-medium">{artist.artist_info.guru_name}</p>
                   </div>
                 )}
 
-                {/* Death Date */}
-                {artist.death_date && (
+                {/* Gharana Name */}
+                {artist.artist_info?.gharana_details?.gharana_name && (
                   <div className="p-4 rounded-lg glass">
-                    <p className="text-white text-opacity-60 text-sm">Death Date</p>
-                    <p className="text-white font-medium">{formatDate(artist.death_date)}</p>
-                  </div>
-                )}
-
-                {/* Nationality */}
-                {artist.nationality && (
-                  <div className="p-4 rounded-lg glass">
-                    <p className="text-white text-opacity-60 text-sm">Nationality</p>
-                    <p className="text-white font-medium">{artist.nationality}</p>
+                    <p className="text-white text-opacity-60 text-sm">Gharana</p>
+                    <p className="text-white font-medium">{artist.artist_info.gharana_details.gharana_name}</p>
                   </div>
                 )}
 
                 {/* Style */}
-                {artist.style && (
+                {artist.artist_info?.gharana_details?.style && (
                   <div className="p-4 rounded-lg glass">
                     <p className="text-white text-opacity-60 text-sm">Style</p>
-                    <p className="text-white font-medium">{artist.style}</p>
+                    <p className="text-white font-medium">{artist.artist_info.gharana_details.style}</p>
                   </div>
                 )}
 
-                {/* Medium */}
-                {artist.medium && (
+                {/* Tradition */}
+                {artist.artist_info?.gharana_details?.tradition && (
                   <div className="p-4 rounded-lg glass">
-                    <p className="text-white text-opacity-60 text-sm">Medium</p>
-                    <p className="text-white font-medium">{artist.medium}</p>
+                    <p className="text-white text-opacity-60 text-sm">Tradition</p>
+                    <p className="text-white font-medium">{artist.artist_info.gharana_details.tradition}</p>
                   </div>
                 )}
 
-                {/* Movements */}
-                {artist.movements && artist.movements.length > 0 && (
+                {/* Early Life */}
+                {artist.artist_info?.biography?.early_life && (
+                  <div className="p-4 rounded-lg glass">
+                    <p className="text-white text-opacity-60 text-sm">Early Life</p>
+                    <p className="text-white font-medium">{artist.artist_info.biography.early_life}</p>
+                  </div>
+                )}
+
+                {/* Education */}
+                {artist.artist_info?.biography?.education && (
                   <div className="p-4 rounded-lg glass">
                     <p className="text-white text-opacity-60 text-sm">Movements</p>
                     <div className="flex flex-wrap gap-2 mt-1">
-                      {artist.movements.map((movement, index) => (
-                        <span
+                    <p className="text-white text-opacity-60 text-sm">Education</p>
+                    <p className="text-white font-medium">{artist.artist_info.biography.education}</p>
+                  </div>
+                )}
 
-                
-                          key={index}
-                          className="px-2 py-1 bg-gradient-to-r from-blue-500 to-purple-500 bg-opacity-20 text-white text-xs rounded-full"
-                        >
-                          {movement}
-                        </span>
-                      ))}
+                {/* Career Highlights */}
+                {artist.artist_info?.biography?.career_highlights && (
+                  <div className="p-4 rounded-lg glass">
+                    <p className="text-white text-opacity-60 text-sm">Career Highlights</p>
+                    <p className="text-white font-medium">{artist.artist_info.biography.career_highlights}</p>
+                  </div>
+                )}
+
+                {/* Extraction Confidence */}
+                {artist.artist_info?.extraction_confidence && (
+                  <div className="p-4 rounded-lg glass">
+                    <p className="text-white text-opacity-60 text-sm">Extraction Confidence</p>
+                    <div className="flex items-center space-x-2">
+                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                        artist.artist_info.extraction_confidence === 'high' 
+                          ? 'bg-green-500 bg-opacity-20 text-green-400'
+                          : artist.artist_info.extraction_confidence === 'medium'
+                          ? 'bg-yellow-500 bg-opacity-20 text-yellow-400'
+                          : 'bg-red-500 bg-opacity-20 text-red-400'
+                      }`}>
+                        {artist.artist_info.extraction_confidence.toUpperCase()}
+                      </span>
                     </div>
+                  </div>
+                )}
+
+                {/* Additional Notes */}
+                {artist.artist_info?.additional_notes && (
+                  <div className="p-4 rounded-lg glass md:col-span-2">
+                    <p className="text-white text-opacity-60 text-sm">Additional Notes</p>
+                    <p className="text-white font-medium">{artist.artist_info.additional_notes}</p>
                   </div>
                 )}
               </div>
             </motion.div>
 
             {/* Achievements */}
-            {artist.achievements && artist.achievements.length > 0 && (
+            {artist.artist_info?.achievements && artist.artist_info.achievements.length > 0 && (
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -262,51 +287,25 @@ const ArtistDetail = () => {
                 <div className="flex items-center justify-between mb-4">
                   <h2 className="text-xl font-semibold text-white">Achievements</h2>
                 </div>
-                <ul className="list-disc list-inside space-y-2 text-white text-opacity-80">
-                  {artist.achievements.map((ach, idx) => (
-                    <li key={idx}>
-                      <strong className="text-white">{ach.title || ach.type || 'Achievement'}</strong>
-                      {ach.year && <span className="text-white text-opacity-60"> — {ach.year}</span>}
-                      {ach.details && <div className="text-white text-opacity-70 mt-1">{ach.details}</div>}
-                    </li>
-                  ))}
-                </ul>
-              </motion.div>
-            )}
-
-            {/* Notable Works */}
-            {artist.notable_works && artist.notable_works.length > 0 && (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.3 }}
-                className="glass-card"
-              >
-                <h2 className="text-xl font-semibold text-white mb-4">Notable Works</h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {artist.notable_works.map((work, index) => (
-                    <div key={index} className="p-4 rounded-lg glass">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="text-white font-medium">{work.title || `Work ${index + 1}`}</p>
-                          {work.year && (
-                            <p className="text-white text-opacity-60 text-sm">{work.year}</p>
+                <div className="space-y-3">
+                  {artist.artist_info.achievements.map((ach, idx) => (
+                    <div key={idx} className="p-4 rounded-lg glass">
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <h4 className="text-white font-medium">
+                            {ach.title || ach.type || 'Achievement'}
+                          </h4>
+                          {ach.year && (
+                            <p className="text-white text-opacity-60 text-sm">{ach.year}</p>
                           )}
-                          {work.description && (
-                            <p className="text-white text-opacity-80 text-sm mt-1">
-                              {work.description}
-                            </p>
+                          {ach.details && (
+                            <p className="text-white text-opacity-80 text-sm mt-2">{ach.details}</p>
                           )}
                         </div>
-                        {work.url && (
-                          <a
-                            href={work.url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="p-2 hover:bg-white/10 rounded-lg transition-colors duration-300"
-                          >
-                            <ExternalLink className="w-4 h-4 text-white text-opacity-60" />
-                          </a>
+                        {ach.type && (
+                          <span className="px-2 py-1 bg-gradient-to-r from-blue-500 to-purple-500 bg-opacity-20 text-white text-xs rounded-full">
+                            {ach.type}
+                          </span>
                         )}
                       </div>
                     </div>
@@ -314,25 +313,10 @@ const ArtistDetail = () => {
                 </div>
               </motion.div>
             )}
+
           </div>
 
           {/* Sidebar */}
-
-                            {/* Source / filenames */}
-                            <div className="flex items-center space-x-2">
-                              <FileText className="w-4 h-4 text-white text-opacity-60" />
-                              <div>
-                                <p className="text-white text-opacity-60 text-sm">Source File</p>
-                                <p className="text-white text-sm">{artist.original_filename || artist.saved_filename || 'Unknown'}</p>
-                              </div>
-                            </div>
-                            {/* Extracted text preview */}
-                            {artist.extracted_text && (
-                              <div className="p-3 rounded-lg glass">
-                                <p className="text-white text-opacity-60 text-sm">Extracted Text Preview</p>
-                                <p className="text-white text-sm whitespace-pre-wrap max-h-40 overflow-auto">{artist.extracted_text.substring(0, 800)}{artist.extracted_text.length>800? '...': ''}</p>
-                              </div>
-                            )}
           <div className="space-y-6">
             {/* Quick Actions */}
             <motion.div
@@ -342,7 +326,7 @@ const ArtistDetail = () => {
               className="glass-card"
             >
 
-                            {/* Contact Details */}
+            {/* Contact Details */}
                             <motion.div
                               initial={{ opacity: 0, x: 20 }}
                               animate={{ opacity: 1, x: 0 }}
@@ -350,7 +334,7 @@ const ArtistDetail = () => {
                               className="glass-card"
                             >
                               <h3 className="text-lg font-semibold text-white mb-4">Contact Details</h3>
-                              <div className="space-y-3 text-white text-opacity-80">
+                              <div className="space-y-4 text-white text-opacity-80">
                                 {/* Phones */}
                                 {artist.artist_info?.contact_details?.contact_info?.phone_numbers && (
                                   <div>
@@ -394,7 +378,7 @@ const ArtistDetail = () => {
                                 {/* Social Media */}
                                 {artist.artist_info?.contact_details?.social_media && (
                                   <div>
-                                    <p className="text-white text-opacity-60 text-sm">Social Media</p>
+                                    <p className="text-white text-opacity-60 text-sm mb-2">Social Media</p>
                                     <div className="flex flex-wrap gap-3 mt-2">
                                       {Object.entries(artist.artist_info.contact_details.social_media).map(([k, v]) => {
                                         if (!v) return null;
@@ -407,6 +391,19 @@ const ArtistDetail = () => {
                                         );
                                       })}
                                     </div>
+                                  </div>
+                                )}
+
+                                {/* Show message if no contact details */}
+                                {!artist.artist_info?.contact_details?.contact_info?.phone_numbers &&
+                                 !artist.artist_info?.contact_details?.contact_info?.emails &&
+                                 !artist.artist_info?.contact_details?.contact_info?.website &&
+                                 !artist.artist_info?.contact_details?.address?.full_address &&
+                                 !artist.artist_info?.contact_details?.social_media && (
+                                  <div className="text-center py-4">
+                                    <p className="text-white text-opacity-60 text-sm">
+                                      No contact details found in the extracted data
+                                    </p>
                                   </div>
                                 )}
                               </div>
@@ -436,7 +433,7 @@ const ArtistDetail = () => {
               className="glass-card"
             >
               <h3 className="text-lg font-semibold text-white mb-4">Metadata</h3>
-              <div className="space-y-3">
+              <div className="space-y-4">
                 <div className="flex items-center space-x-2">
                   <Calendar className="w-4 h-4 text-white text-opacity-60" />
                   <div>
@@ -448,7 +445,7 @@ const ArtistDetail = () => {
                   <FileText className="w-4 h-4 text-white text-opacity-60" />
                   <div>
                     <p className="text-white text-opacity-60 text-sm">Source</p>
-                    <p className="text-white text-sm">{artist.source_document || 'Unknown'}</p>
+                    <p className="text-white text-sm">{artist.original_filename || artist.saved_filename || 'Unknown'}</p>
                   </div>
                 </div>
                 <div className="flex items-center space-x-2">
@@ -461,11 +458,56 @@ const ArtistDetail = () => {
               </div>
             </motion.div>
 
+            {/* Extracted Text Preview */}
+            {artist.extracted_text && (
+              <motion.div
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.6, delay: 0.35 }}
+                className="glass-card"
+              >
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-semibold text-white">Extracted Text</h3>
+                  <button
+                    onClick={() => copyToClipboard(artist.extracted_text)}
+                    className="p-2 hover:bg-white/10 rounded-lg transition-colors duration-300"
+                    title="Copy extracted text"
+                  >
+                    <Copy className="w-4 h-4 text-white text-opacity-60" />
+                  </button>
+                </div>
+                <div className="p-4 rounded-lg glass max-h-60 overflow-y-auto">
+                  <p className="text-white text-opacity-60 text-sm whitespace-pre-wrap">
+                    {artist.extracted_text}
+                  </p>
+                </div>
+              </motion.div>
+            )}
+
+            {/* Enhancement Button */}
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.6, delay: 0.4 }}
+              className="glass-card"
+            >
+              <h3 className="text-lg font-semibold text-white mb-4">AI Enhancement</h3>
+              <p className="text-white text-opacity-60 text-sm mb-4">
+                Use AI to find missing contact details and enhance this artist's information.
+              </p>
+              <button
+                disabled
+                className="w-full glass-button bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
+              >
+                <span>Enhance with AI</span>
+              </button>
+            </motion.div>
+
             {/* Related Artists */}
             <motion.div
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.6, delay: 0.3 }}
+              transition={{ duration: 0.6, delay: 0.45 }}
               className="glass-card"
             >
               <h3 className="text-lg font-semibold text-white mb-4">Similar Artists</h3>
