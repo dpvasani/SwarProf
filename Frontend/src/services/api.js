@@ -777,7 +777,7 @@ Always output the final enhanced version of the data with perfect formatting and
                 "filename": file.filename,
                 "guaranteed_artist_name": filename_artist_name,
                 "extracted_text_length": len(extracted_text),
-                "extracted_text_preview": extracted_text[:200] + "..." if len(extracted_text) > 200 else extracted_text,
+                "extracted_text_preview": extracted_text[:200] + "...\" if len(extracted_text) > 200 else extracted_text,
                 "artist_info": artist_info_obj.dict(),
                 "message": "Artist information extracted and comprehensively enhanced with GUARANTEED artist name"
             }
