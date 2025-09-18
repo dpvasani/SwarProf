@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { artistAPI } from '../services/api';
 import { 
@@ -9,7 +9,8 @@ import {
   FileText, 
   Copy,
   Download,
-  Share
+  Share,
+  Sparkles
 } from 'lucide-react';
 import LoadingSpinner from '../components/LoadingSpinner';
 
@@ -22,46 +23,46 @@ const ArtistDetail = () => {
   const [enhancing, setEnhancing] = useState(false);
   const [enhancementResult, setEnhancementResult] = useState('');
 
-  useEffect(() => {
-    const fetchArtist = async () => {
-      try {
-        setLoading(true);
-        const response = await artistAPI.getArtist(id);
-        
-        // Transform the backend data to match frontend expectations
-        const artistData = response.data.artist;
-        if (artistData) {
-          const transformedArtist = {
-            id: artistData._id,
-            name: artistData.artist_info?.artist_name || 'Unknown Artist',
-            bio: artistData.artist_info?.summary || artistData.artist_info?.biography?.background || '',
-            birth_date: artistData.artist_info?.biography?.early_life,
-            nationality: artistData.artist_info?.contact_details?.address?.country,
-            style: artistData.artist_info?.gharana_details?.style,
-            achievements: artistData.artist_info?.achievements || [],
-            created_at: artistData.created_at,
-            updated_at: artistData.updated_at,
-            original_filename: artistData.original_filename,
-            saved_filename: artistData.saved_filename,
-            extracted_text: artistData.extracted_text,
-            artist_info: artistData.artist_info
-          };
-          setArtist(transformedArtist);
-        } else {
-          setError('Artist data not found');
-        }
-      } catch (error) {
-        console.error('Failed to fetch artist:', error);
-        setError('Failed to load artist details');
-      } finally {
-        setLoading(false);
+  const fetchArtist = useCallback(async () => {
+    try {
+      setLoading(true);
+      const response = await artistAPI.getArtist(id);
+      
+      // Transform the backend data to match frontend expectations
+      const artistData = response.data.artist;
+      if (artistData) {
+        const transformedArtist = {
+          id: artistData._id,
+          name: artistData.artist_info?.artist_name || 'Unknown Artist',
+          bio: artistData.artist_info?.summary || artistData.artist_info?.biography?.background || '',
+          birth_date: artistData.artist_info?.biography?.early_life,
+          nationality: artistData.artist_info?.contact_details?.address?.country,
+          style: artistData.artist_info?.gharana_details?.style,
+          achievements: artistData.artist_info?.achievements || [],
+          created_at: artistData.created_at,
+          updated_at: artistData.updated_at,
+          original_filename: artistData.original_filename,
+          saved_filename: artistData.saved_filename,
+          extracted_text: artistData.extracted_text,
+          artist_info: artistData.artist_info
+        };
+        setArtist(transformedArtist);
+      } else {
+        setError('Artist data not found');
       }
-    };
+    } catch (error) {
+      console.error('Failed to fetch artist:', error);
+      setError('Failed to load artist details');
+    } finally {
+      setLoading(false);
+    }
+  }, [id]);
 
+  useEffect(() => {
     if (id) {
       fetchArtist();
     }
-  }, [id]);
+  }, [id, fetchArtist]);
 
   const formatDate = (dateString) => {
     if (!dateString) return 'Unknown';
@@ -82,29 +83,26 @@ const ArtistDetail = () => {
       setEnhancing(true);
       setEnhancementResult('');
       
-      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8000'}/api/artists/${id}/enhance`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
-          'Content-Type': 'application/json',
-        },
-      });
+      console.log('Starting comprehensive enhancement for artist:', id);
+      const response = await artistAPI.enhanceArtistComprehensive(id);
       
-      if (response.ok) {
-        const result = await response.json();
-        setEnhancementResult(result.message || 'Artist information comprehensively enhanced successfully!');
+      if (response.data.success) {
+        setEnhancementResult('✅ Artist data comprehensively enhanced! Grammar, formatting, and presentation improved.');
         
         // Refresh the artist data to show the enhanced information
-        setTimeout(() => {
-          window.location.reload();
-        }, 2000);
+        setTimeout(async () => {
+          try {
+            await fetchArtist();
+          } catch (error) {
+            console.error('Failed to refresh artist data:', error);
+          }
+        }, 1500);
       } else {
-        const errorData = await response.json();
-        setEnhancementResult(`Enhancement failed: ${errorData.detail || 'Unknown error'}`);
+        setEnhancementResult(`❌ Enhancement failed: ${response.data.message || 'Unknown error'}`);
       }
     } catch (error) {
-      console.error('Enhancement failed:', error);
-      setEnhancementResult('Enhancement failed due to network error');
+      console.error('Enhancement error:', error);
+      setEnhancementResult('❌ Enhancement service temporarily unavailable. Please try again later.');
     } finally {
       setEnhancing(false);
     }
@@ -171,12 +169,7 @@ const ArtistDetail = () => {
     <div className="min-h-screen px-4 py-8">
       <div className="max-w-4xl mx-auto">
         {/* Header */}
-        <div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-          className="mb-8"
-        >
+        <div className="mb-8">
           <Link 
             to="/artists" 
             className="inline-flex items-center text-blue-400 hover:text-blue-300 transition-colors duration-300 mb-6"
@@ -225,12 +218,7 @@ const ArtistDetail = () => {
           <div className="lg:col-span-2 space-y-6">
             {/* Biography */}
             {artist.bio && (
-              <div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.1 }}
-                className="glass-card"
-              >
+              <div className="glass-card">
                 <div className="flex items-center justify-between mb-4">
                   <h2 className="text-xl font-semibold text-white">Biography</h2>
                   <button
@@ -248,12 +236,7 @@ const ArtistDetail = () => {
             )}
 
             {/* Additional Information */}
-            <div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.2 }}
-              className="glass-card"
-            >
+            <div className="glass-card">
               <h2 className="text-xl font-semibold text-white mb-4">Additional Information</h2>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -594,13 +577,22 @@ const ArtistDetail = () => {
                   </>
                 ) : (
                   <>
+                    <Sparkles className="w-4 h-4" />
                     <span>Comprehensively Enhance with AI</span>
                   </>
                 )}
               </button>
               {enhancementResult && (
-                <div className="mt-4 p-3 rounded-lg bg-green-500 bg-opacity-20 border border-green-500 border-opacity-30">
-                  <p className="text-green-400 text-sm">✅ {enhancementResult}</p>
+                <div className={`mt-4 p-3 rounded-lg ${
+                  enhancementResult.includes('✅') 
+                    ? 'bg-green-500 bg-opacity-20 border border-green-500 border-opacity-30'
+                    : 'bg-red-500 bg-opacity-20 border border-red-500 border-opacity-30'
+                }`}>
+                  <p className={`text-sm ${
+                    enhancementResult.includes('✅') ? 'text-green-400' : 'text-red-400'
+                  }`}>
+                    {enhancementResult}
+                  </p>
                 </div>
               )}
             </div>

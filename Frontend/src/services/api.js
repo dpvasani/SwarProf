@@ -67,6 +67,7 @@ export const artistAPI = {
   },
   updateArtist: (id, data) => api.put(`/api/artists/${id}`, data),
   deleteArtist: (id) => api.delete(`/api/artists/${id}`),
+  enhanceArtistComprehensive: (id) => api.post(`/api/artists/${id}/enhance-comprehensive`),
 };
 
 export const uploadAPI = {
