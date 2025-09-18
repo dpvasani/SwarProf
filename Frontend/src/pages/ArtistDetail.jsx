@@ -42,6 +42,8 @@ const ArtistDetail = () => {
             created_at: artistData.created_at,
             updated_at: artistData.updated_at,
             original_filename: artistData.original_filename,
+            saved_filename: artistData.saved_filename,
+            extracted_text: artistData.extracted_text,
             artist_info: artistData.artist_info
           };
           setArtist(transformedArtist);
@@ -235,6 +237,8 @@ const ArtistDetail = () => {
                     <div className="flex flex-wrap gap-2 mt-1">
                       {artist.movements.map((movement, index) => (
                         <span
+
+                
                           key={index}
                           className="px-2 py-1 bg-gradient-to-r from-blue-500 to-purple-500 bg-opacity-20 text-white text-xs rounded-full"
                         >
@@ -246,6 +250,29 @@ const ArtistDetail = () => {
                 )}
               </div>
             </motion.div>
+
+            {/* Achievements */}
+            {artist.achievements && artist.achievements.length > 0 && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.15 }}
+                className="glass-card"
+              >
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-xl font-semibold text-white">Achievements</h2>
+                </div>
+                <ul className="list-disc list-inside space-y-2 text-white text-opacity-80">
+                  {artist.achievements.map((ach, idx) => (
+                    <li key={idx}>
+                      <strong className="text-white">{ach.title || ach.type || 'Achievement'}</strong>
+                      {ach.year && <span className="text-white text-opacity-60"> — {ach.year}</span>}
+                      {ach.details && <div className="text-white text-opacity-70 mt-1">{ach.details}</div>}
+                    </li>
+                  ))}
+                </ul>
+              </motion.div>
+            )}
 
             {/* Notable Works */}
             {artist.notable_works && artist.notable_works.length > 0 && (
@@ -290,6 +317,22 @@ const ArtistDetail = () => {
           </div>
 
           {/* Sidebar */}
+
+                            {/* Source / filenames */}
+                            <div className="flex items-center space-x-2">
+                              <FileText className="w-4 h-4 text-white text-opacity-60" />
+                              <div>
+                                <p className="text-white text-opacity-60 text-sm">Source File</p>
+                                <p className="text-white text-sm">{artist.original_filename || artist.saved_filename || 'Unknown'}</p>
+                              </div>
+                            </div>
+                            {/* Extracted text preview */}
+                            {artist.extracted_text && (
+                              <div className="p-3 rounded-lg glass">
+                                <p className="text-white text-opacity-60 text-sm">Extracted Text Preview</p>
+                                <p className="text-white text-sm whitespace-pre-wrap max-h-40 overflow-auto">{artist.extracted_text.substring(0, 800)}{artist.extracted_text.length>800? '...': ''}</p>
+                              </div>
+                            )}
           <div className="space-y-6">
             {/* Quick Actions */}
             <motion.div
@@ -298,6 +341,76 @@ const ArtistDetail = () => {
               transition={{ duration: 0.6, delay: 0.1 }}
               className="glass-card"
             >
+
+                            {/* Contact Details */}
+                            <motion.div
+                              initial={{ opacity: 0, x: 20 }}
+                              animate={{ opacity: 1, x: 0 }}
+                              transition={{ duration: 0.6, delay: 0.25 }}
+                              className="glass-card"
+                            >
+                              <h3 className="text-lg font-semibold text-white mb-4">Contact Details</h3>
+                              <div className="space-y-3 text-white text-opacity-80">
+                                {/* Phones */}
+                                {artist.artist_info?.contact_details?.contact_info?.phone_numbers && (
+                                  <div>
+                                    <p className="text-white text-opacity-60 text-sm">Phone</p>
+                                    <div className="flex flex-col mt-1">
+                                      {artist.artist_info.contact_details.contact_info.phone_numbers.map((p, i) => (
+                                        <a key={i} href={`tel:${p}`} className="text-white text-sm hover:underline">{p}</a>
+                                      ))}
+                                    </div>
+                                  </div>
+                                )}
+
+                                {/* Emails */}
+                                {artist.artist_info?.contact_details?.contact_info?.emails && (
+                                  <div>
+                                    <p className="text-white text-opacity-60 text-sm">Email</p>
+                                    <div className="flex flex-col mt-1">
+                                      {artist.artist_info.contact_details.contact_info.emails.map((e, i) => (
+                                        <a key={i} href={`mailto:${e}`} className="text-white text-sm hover:underline">{e}</a>
+                                      ))}
+                                    </div>
+                                  </div>
+                                )}
+
+                                {/* Website */}
+                                {artist.artist_info?.contact_details?.contact_info?.website && (
+                                  <div>
+                                    <p className="text-white text-opacity-60 text-sm">Website</p>
+                                    <a href={artist.artist_info.contact_details.contact_info.website} target="_blank" rel="noopener noreferrer" className="text-white text-sm hover:underline">{artist.artist_info.contact_details.contact_info.website}</a>
+                                  </div>
+                                )}
+
+                                {/* Address */}
+                                {artist.artist_info?.contact_details?.address?.full_address && (
+                                  <div>
+                                    <p className="text-white text-opacity-60 text-sm">Address</p>
+                                    <p className="text-white text-sm">{artist.artist_info.contact_details.address.full_address}</p>
+                                  </div>
+                                )}
+
+                                {/* Social Media */}
+                                {artist.artist_info?.contact_details?.social_media && (
+                                  <div>
+                                    <p className="text-white text-opacity-60 text-sm">Social Media</p>
+                                    <div className="flex flex-wrap gap-3 mt-2">
+                                      {Object.entries(artist.artist_info.contact_details.social_media).map(([k, v]) => {
+                                        if (!v) return null;
+                                        // If v looks like a handle (starts with @), show as text; otherwise link
+                                        const href = v.startsWith('http') ? v : (v.startsWith('@') ? null : `https://${v}`);
+                                        return (
+                                          <a key={k} href={href || '#'} onClick={e => { if(!href) e.preventDefault(); }} className="px-2 py-1 bg-white bg-opacity-10 rounded-full text-white text-sm hover:underline">
+                                            {k.charAt(0).toUpperCase() + k.slice(1)}: {v}
+                                          </a>
+                                        );
+                                      })}
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+                            </motion.div>
               <h3 className="text-lg font-semibold text-white mb-4">Quick Actions</h3>
               <div className="space-y-2">
                 <button className="w-full glass-button flex items-center justify-center space-x-2">
