@@ -276,11 +276,9 @@ Your task is to comprehensively refine, correct, and enhance ALL of the extracte
 {existing_data}
 ```
 
-## Original Document Text (for additional context):
-{document_text}
-
-## Example of Enhancement Quality Expected:
-
+            # STEP 4: COMPREHENSIVE AI ENHANCEMENT - Refine and improve ALL extracted data
+            print("🔄 STEP 4: COMPREHENSIVE AI ENHANCEMENT")
+            try:
 **Input (raw extraction):**
 Biography: "SHUBHODEEP SINHA  is a 15 year Indian national brought up In Shanghai.  Studying in grade 10 in Livingston American School.   SHUBHO as we fondly call him  is a  musical prodigy who has developed immense interest in Indian Classical Music at a very young age."
 
@@ -463,13 +461,9 @@ Always output the final enhanced version of the data with perfect formatting and
             print(f"   Enhanced Artist Name: {enhanced_data.get('artist_name')}")
             print(f"   Enhanced Summary Length: {len(enhanced_data.get('summary', ''))}")
             print(f"   Enhancement Notes: {enhanced_data.get('additional_notes', 'None')[:100]}...")
-            
-            return enhanced_data
-            
-        except json.JSONDecodeError as e:
-            print(f"⚠️ JSON parsing error during comprehensive enhancement: {e}")
-            print("Returning original data with enhancement note...")
-            existing_data["additional_notes"] = f"Comprehensive enhancement failed due to parsing error: {str(e)}"
+            # STEP 4: COMPREHENSIVE AI ENHANCEMENT - Refine and improve ALL extracted data
+            print("🔄 STEP 4: COMPREHENSIVE AI ENHANCEMENT")
+            try:
             return existing_data
         except Exception as e:
             print(f"❌ Comprehensive enhancement error: {e}")
@@ -710,15 +704,14 @@ Always output the final enhanced version of the data with perfect formatting and
             print(f"📖 Text extracted: {len(extracted_text)} characters")
             
             # STEP 3: AI ENHANCEMENT WITH GUARANTEED ARTIST NAME
+            print("🤖 STEP 3: Basic AI extraction...")
+            print("🤖 STEP 3: Basic AI extraction...")
+            print("🤖 STEP 3: Basic AI extraction...")
             artist_info_raw = await self.extract_with_gemini(filename_artist_name, extracted_text)
             
-            # STEP 3.5: COMPREHENSIVE AI ENHANCEMENT - Refine and improve ALL extracted data
-            print(f"🔄 STEP 3.5: COMPREHENSIVE AI ENHANCEMENT")
-            enhanced_artist_info_raw = await self.comprehensive_enhance_with_gemini(
-                filename_artist_name, 
-                artist_info_raw, 
-                extracted_text
-            )
+            # STEP 4: COMPREHENSIVE AI ENHANCEMENT - Refine and improve ALL extracted data
+            print("🔄 STEP 4: COMPREHENSIVE AI ENHANCEMENT")
+            try:
             
             # STEP 4: FINAL GUARANTEE - ENSURE ARTIST NAME IS SET
             if not enhanced_artist_info_raw.get("artist_name"):
