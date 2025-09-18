@@ -61,31 +61,14 @@ class ArtistController:
             # Initialize Gemini model (if available)
             if genai is not None and settings.GEMINI_API_KEY:
                 try:
-                    print(f"🤖 Initializing Gemini model: {settings.GEMINI_MODEL_NAME}")
-                    print(f"🔑 Using API key: {settings.GEMINI_API_KEY[:20]}...")
-                    
-                    # Configure API key
-                    genai.configure(api_key=settings.GEMINI_API_KEY)
-                    
-                    # Initialize model
-                    self.gemini_model = genai.GenerativeModel(settings.GEMINI_MODEL_NAME)
-                    
-                    # Test the model with a simple request
-                    test_response = self.gemini_model.generate_content("Hello, test message")
-                    print(f"🧪 Gemini test successful: {test_response.text[:50]}...")
-                    print("✅ Gemini model initialized and tested successfully")
+                    self.gemini_model = genai.GenerativeModel('gemini-1.5-flash')
+                    print("✅ Gemini model initialized successfully")
                 except Exception as e:
                     print(f"⚠️ Gemini model initialization failed: {e}")
-                    print(f"🔍 API Key length: {len(settings.GEMINI_API_KEY) if settings.GEMINI_API_KEY else 0}")
-                    print(f"🔍 Model name: {settings.GEMINI_MODEL_NAME}")
                     self.gemini_model = None
             else:
                 self.gemini_model = None
-                if not settings.GEMINI_API_KEY:
-                    print(f"⚠️ Gemini API key not found in environment (got: '{settings.GEMINI_API_KEY}')")
-                if genai is None:
-                    print("⚠️ Gemini SDK not installed")
-                print("⚠️ Gemini model not available - AI enhancement disabled")
+                print("⚠️ Gemini model not available")
             
             print("✅ ArtistController initialized successfully")
             
@@ -438,12 +421,23 @@ Always output the final enhanced version of the data with perfect formatting and
             print(f"🔍 COMPREHENSIVE AI ENHANCEMENT for: '{artist_name}'")
             print(f"   Existing Data Fields: {len(existing_data)}")
             print(f"   Document Text Length: {len(document_text)}")
+            print(f"   Gemini Model Available: {self.gemini_model is not None}")
+            print(f"   API Key Available: {bool(settings.GEMINI_API_KEY)}")
             
             if self.gemini_model is None:
+                print("🔄 Gemini model not initialized, attempting to initialize...")
                 if genai is not None and settings.GEMINI_API_KEY:
-                    self.gemini_model = genai.GenerativeModel("gemini-1.5-flash")
+                    try:
+                        genai.configure(api_key=settings.GEMINI_API_KEY)
+                        self.gemini_model = genai.GenerativeModel(settings.GEMINI_MODEL_NAME)
+                        print("✅ Gemini model initialized successfully for enhancement")
+                    except Exception as init_error:
+                        print(f"❌ Failed to initialize Gemini for enhancement: {init_error}")
+                        existing_data["additional_notes"] = f"Gemini initialization failed: {str(init_error)}"
+                        return existing_data
                 else:
                     print("⚠️ Gemini not available for comprehensive enhancement")
+                    existing_data["additional_notes"] = "Gemini API not available for enhancement"
                     return existing_data
             
             prompt = self.create_comprehensive_enhancement_prompt(artist_name, existing_data, document_text)
