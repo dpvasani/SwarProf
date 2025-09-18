@@ -33,14 +33,14 @@ from werkzeug.utils import secure_filename
 if genai is not None and settings.GEMINI_API_KEY:
     try:
         genai.configure(api_key=settings.GEMINI_API_KEY)
-        print("✅ Gemini API configured successfully")
+        print(f"✅ Gemini API configured successfully with key: {settings.GEMINI_API_KEY[:20]}...")
     except Exception as e:
         print(f"Warning: failed to configure Gemini SDK in ArtistController: {e}")
 else:
     if genai is None:
         print("Gemini SDK not available in ArtistController; skipping configuration.")
     else:
-        print("GEMINI_API_KEY not set; Gemini features disabled in ArtistController.")
+        print(f"GEMINI_API_KEY not set (got: '{settings.GEMINI_API_KEY}'); Gemini features disabled in ArtistController.")
 
 class ArtistController:
     
