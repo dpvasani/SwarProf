@@ -443,15 +443,6 @@ Please provide the completely enhanced and refined artist information in the exa
                 else:
                     print("⚠️ Gemini not available for comprehensive enhancement")
                     return existing_data
-            
-            prompt = self.create_comprehensive_enhancement_prompt(artist_name, existing_data, document_text)
-            
-            print("🤖 Sending to Gemini for comprehensive enhancement...")
-            response = self.gemini_model.generate_content(prompt)
-            content = response.text.strip()
-            
-            print(f"   Gemini enhancement response length: {len(content)}")
-            
             # Parse JSON from response
             json_str = content
             if "```json" in content:
