@@ -19,6 +19,8 @@ const ArtistDetail = () => {
   const [artist, setArtist] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [enhancing, setEnhancing] = useState(false);
+  const [enhancementResult, setEnhancementResult] = useState('');
 
   useEffect(() => {
     const fetchArtist = async () => {
@@ -73,6 +75,39 @@ const ArtistDetail = () => {
   const copyToClipboard = (text) => {
     navigator.clipboard.writeText(text);
     // You could add a toast notification here
+  };
+
+  const handleComprehensiveEnhancement = async () => {
+    try {
+      setEnhancing(true);
+      setEnhancementResult('');
+      
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8000'}/api/artists/${id}/enhance`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          'Content-Type': 'application/json',
+        },
+      });
+      
+      if (response.ok) {
+        const result = await response.json();
+        setEnhancementResult(result.message || 'Artist information comprehensively enhanced successfully!');
+        
+        // Refresh the artist data to show the enhanced information
+        setTimeout(() => {
+          window.location.reload();
+        }, 2000);
+      } else {
+        const errorData = await response.json();
+        setEnhancementResult(`Enhancement failed: ${errorData.detail || 'Unknown error'}`);
+      }
+    } catch (error) {
+      console.error('Enhancement failed:', error);
+      setEnhancementResult('Enhancement failed due to network error');
+    } finally {
+      setEnhancing(false);
+    }
   };
 
   // Normalize and compute confidence display values
@@ -543,16 +578,31 @@ const ArtistDetail = () => {
               transition={{ duration: 0.6, delay: 0.4 }}
               className="glass-card"
             >
-              <h3 className="text-lg font-semibold text-white mb-4">AI Enhancement</h3>
+              <h3 className="text-lg font-semibold text-white mb-4">Comprehensive AI Enhancement</h3>
               <p className="text-white text-opacity-60 text-sm mb-4">
-                Use AI to find missing contact details and enhance this artist's information.
+                Use AI to comprehensively refine, correct, and enhance ALL of this artist's information - not just missing fields, but improving existing data quality, fixing errors, and making everything more complete and accurate.
               </p>
               <button
-                disabled
+                onClick={() => handleComprehensiveEnhancement()}
+                disabled={enhancing}
                 className="w-full glass-button bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
               >
-                <span>Enhance with AI</span>
+                {enhancing ? (
+                  <>
+                    <LoadingSpinner size="sm" />
+                    <span>Enhancing...</span>
+                  </>
+                ) : (
+                  <>
+                    <span>Comprehensively Enhance with AI</span>
+                  </>
+                )}
               </button>
+              {enhancementResult && (
+                <div className="mt-4 p-3 rounded-lg bg-green-500 bg-opacity-20 border border-green-500 border-opacity-30">
+                  <p className="text-green-400 text-sm">✅ {enhancementResult}</p>
+                </div>
+              )}
             </div>
           </div>
         </div>

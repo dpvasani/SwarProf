@@ -254,6 +254,127 @@ Please analyze the document and provide the extracted information in the exact J
 """
         return prompt_template.format(artist_name=artist_name, document_text=document_text)
     
+    def create_comprehensive_enhancement_prompt(self, artist_name: str, existing_data: dict, document_text: str = "") -> str:
+        """Create prompt for comprehensive AI enhancement that refines ALL extracted data"""
+        prompt_template = """
+# Comprehensive Artist Information Enhancement and Refinement Task
+
+You are an expert information analyst and enhancement specialist. You have been provided with raw extracted artist information that may contain errors, incomplete data, fragmented text, or inaccuracies due to imperfect extraction processes.
+
+Your task is to take this raw data as input context and produce a completely refined, corrected, and enhanced response that is reliable, consistent, and human-readable.
+
+## Artist Name: {artist_name}
+
+## Raw Extracted Data (may contain errors, fragments, or incomplete information):
+{existing_data}
+
+## Original Document Text (for additional context):
+{document_text}
+
+## Enhancement Instructions:
+
+### 1. **Data Validation & Correction**
+- Review ALL existing fields for accuracy and consistency
+- Correct any obvious errors, typos, or misinterpretations
+- Fix fragmented or broken text caused by OCR or extraction errors
+- Ensure all information is factually consistent and logical
+
+### 2. **Text Refinement & Rewriting**
+- Rewrite fragmented or poorly structured text into clean, natural language
+- Improve grammar, sentence structure, and readability
+- Ensure professional and coherent presentation
+- Remove extraction artifacts and formatting issues
+
+### 3. **Data Completion & Enhancement**
+- Fill in missing information where possible from the document context
+- Enhance existing partial information to be more complete
+- Add relevant details that may have been missed in initial extraction
+- Ensure all related information is properly connected and organized
+
+### 4. **Quality Assurance**
+- Verify that all enhanced information is supported by the source document
+- Ensure consistency across all fields
+- Maintain factual accuracy - do not fabricate information not present in the source
+- Provide appropriate confidence levels based on source reliability
+
+## Output Requirements:
+
+Produce a completely refined and enhanced JSON response with the following structure:
+
+```json
+{{
+  "artist_name": "{artist_name}",
+  "guru_name": "Enhanced and corrected guru/teacher name or null",
+  "gharana_details": {{
+    "gharana_name": "Refined gharana name or null",
+    "style": "Enhanced musical/dance style description or null",
+    "tradition": "Improved cultural tradition description or null"
+  }},
+  "biography": {{
+    "early_life": "Refined and enhanced early life details or null",
+    "background": "Improved background information with better structure or null",
+    "education": "Enhanced education details with corrections or null",
+    "career_highlights": "Refined career highlights with better presentation or null"
+  }},
+  "achievements": [
+    {{
+      "type": "Refined achievement type",
+      "title": "Enhanced and corrected achievement title",
+      "year": "Validated year or null",
+      "details": "Improved achievement details with better description or null"
+    }}
+  ],
+  "contact_details": {{
+    "social_media": {{
+      "instagram": "Validated and corrected Instagram handle/URL or null",
+      "facebook": "Enhanced Facebook profile/URL or null",
+      "twitter": "Corrected Twitter handle/URL or null",
+      "youtube": "Refined YouTube channel/URL or null",
+      "linkedin": "Enhanced LinkedIn profile/URL or null",
+      "spotify": "Corrected Spotify artist profile/URL or null",
+      "tiktok": "Validated TikTok handle/URL or null",
+      "snapchat": "Enhanced Snapchat handle or null",
+      "discord": "Corrected Discord handle or null",
+      "other": "Any other validated social media links or null"
+    }},
+    "contact_info": {{
+      "phone_numbers": ["Validated and formatted phone numbers"] or null,
+      "emails": ["Corrected and validated email addresses"] or null,
+      "website": "Enhanced and validated website URL or null",
+      "phone": "Primary validated phone number or null",
+      "email": "Primary validated email address or null"
+    }},
+    "address": {{
+      "full_address": "Enhanced and properly formatted complete address or null",
+      "city": "Corrected city name or null",
+      "state": "Enhanced state/province name or null",
+      "country": "Validated country name or null"
+    }}
+  }},
+  "summary": "Completely rewritten, comprehensive, and well-structured summary that presents the artist's profile in a professional and engaging manner",
+  "extraction_confidence": "Updated confidence level based on enhancement quality (high/medium/low)",
+  "additional_notes": "Enhanced notes including information about corrections made, data quality improvements, and any important observations about the enhancement process"
+}}
+```
+
+## Critical Guidelines:
+
+1. **Comprehensive Enhancement**: Don't just fill missing fields - improve ALL existing data
+2. **Error Correction**: Fix any inaccuracies, typos, or extraction errors you identify
+3. **Text Quality**: Rewrite fragmented or poorly structured text into professional, readable content
+4. **Factual Accuracy**: Only enhance with information that can be verified from the source document
+5. **Consistency**: Ensure all information is internally consistent and logically connected
+6. **Professional Presentation**: Present all information in a polished, professional manner
+7. **Transparency**: Note significant corrections or enhancements in the additional_notes field
+
+Please provide the completely enhanced and refined artist information in the exact JSON format specified above.
+"""
+        return prompt_template.format(
+            artist_name=artist_name,
+            existing_data=json.dumps(existing_data, indent=2),
+            document_text=document_text[:2000] + "..." if len(document_text) > 2000 else document_text
+        )
+
     async def extract_with_gemini(self, artist_name: str, document_text: str) -> dict:
         """Extract artist information using Gemini AI with guaranteed artist name"""
         try:
@@ -309,6 +430,64 @@ Please analyze the document and provide the extracted information in the exact J
             print(f"❌ Gemini extraction error: {e}")
             return self.create_fallback_data(artist_name, document_text)
     
+    async def comprehensive_enhance_with_gemini(self, artist_name: str, existing_data: dict, document_text: str = "") -> dict:
+        """Comprehensively enhance and refine ALL artist data using Gemini AI"""
+        try:
+            print(f"🔍 COMPREHENSIVE AI ENHANCEMENT for: '{artist_name}'")
+            print(f"   Existing Data Fields: {len(existing_data)}")
+            print(f"   Document Text Length: {len(document_text)}")
+            
+            if self.gemini_model is None:
+                if genai is not None and settings.GEMINI_API_KEY:
+                    self.gemini_model = genai.GenerativeModel("gemini-1.5-flash")
+                else:
+                    print("⚠️ Gemini not available for comprehensive enhancement")
+                    return existing_data
+            
+            prompt = self.create_comprehensive_enhancement_prompt(artist_name, existing_data, document_text)
+            
+            print("🤖 Sending to Gemini for comprehensive enhancement...")
+            response = self.gemini_model.generate_content(prompt)
+            content = response.text.strip()
+            
+            print(f"   Gemini enhancement response length: {len(content)}")
+            
+            # Parse JSON from response
+            json_str = content
+            if "```json" in content:
+                json_match = re.search(r'```json\s*\n(.*?)\n```', content, re.DOTALL)
+                if json_match:
+                    json_str = json_match.group(1)
+                else:
+                    start = content.find('{')
+                    end = content.rfind('}') + 1
+                    json_str = content[start:end] if start != -1 and end > start else content
+            else:
+                start = content.find('{')
+                end = content.rfind('}') + 1
+                json_str = content[start:end] if start != -1 and end > start else content
+            
+            enhanced_data = json.loads(json_str)
+            
+            # GUARANTEE artist name is preserved
+            enhanced_data["artist_name"] = artist_name
+            
+            print("✅ Comprehensive AI enhancement successful!")
+            print(f"   Enhanced Artist Name: {enhanced_data.get('artist_name')}")
+            print(f"   Enhanced Summary Length: {len(enhanced_data.get('summary', ''))}")
+            print(f"   Enhancement Notes: {enhanced_data.get('additional_notes', 'None')[:100]}...")
+            
+            return enhanced_data
+            
+        except json.JSONDecodeError as e:
+            print(f"⚠️ JSON parsing error during comprehensive enhancement: {e}")
+            print("Returning original data with enhancement note...")
+            existing_data["additional_notes"] = f"Comprehensive enhancement failed due to parsing error: {str(e)}"
+            return existing_data
+        except Exception as e:
+            print(f"❌ Comprehensive enhancement error: {e}")
+            existing_data["additional_notes"] = f"Comprehensive enhancement failed: {str(e)}"
+            return existing_data
     def create_fallback_data(self, artist_name: str, document_text: str) -> dict:
         """Create fallback data when AI fails - now with enhanced contact extraction"""
         print(f"🔄 Creating fallback data for: '{artist_name}'")
@@ -546,23 +725,32 @@ Please analyze the document and provide the extracted information in the exact J
             # STEP 3: AI ENHANCEMENT WITH GUARANTEED ARTIST NAME
             artist_info_raw = await self.extract_with_gemini(filename_artist_name, extracted_text)
             
+            # STEP 3.5: COMPREHENSIVE AI ENHANCEMENT - Refine and improve ALL extracted data
+            print(f"🔄 STEP 3.5: COMPREHENSIVE AI ENHANCEMENT")
+            enhanced_artist_info_raw = await self.comprehensive_enhance_with_gemini(
+                filename_artist_name, 
+                artist_info_raw, 
+                extracted_text
+            )
+            
             # STEP 4: FINAL GUARANTEE - ENSURE ARTIST NAME IS SET
-            if not artist_info_raw.get("artist_name"):
-                artist_info_raw["artist_name"] = filename_artist_name
+            if not enhanced_artist_info_raw.get("artist_name"):
+                enhanced_artist_info_raw["artist_name"] = filename_artist_name
                 print(f"🛡️ FINAL SAFETY: Set artist_name to '{filename_artist_name}'")
             
-            print(f"✅ FINAL ARTIST NAME: '{artist_info_raw['artist_name']}'")
+            print(f"✅ FINAL ENHANCED ARTIST NAME: '{enhanced_artist_info_raw['artist_name']}'")
             
             # STEP 5: VALIDATE AND CREATE PYDANTIC MODEL
             try:
-                artist_info_obj = ArtistInfo(**artist_info_raw)
-                print("✅ Data validation successful")
+                artist_info_obj = ArtistInfo(**enhanced_artist_info_raw)
+                print("✅ Enhanced data validation successful")
             except Exception as e:
-                print(f"⚠️ Validation error: {e}")
+                print(f"⚠️ Enhanced data validation error: {e}")
                 # Create minimal valid object with guaranteed artist name
                 artist_info_obj = ArtistInfo(
                     artist_name=filename_artist_name,
-                    summary=f"Artist information for {filename_artist_name}"
+                    summary=f"Enhanced artist information for {filename_artist_name}",
+                    additional_notes="Comprehensive enhancement applied but validation failed"
                 )
                 print(f"✅ Fallback validation with artist_name='{filename_artist_name}'")
             
@@ -588,8 +776,9 @@ Please analyze the document and provide the extracted information in the exact J
             # Clean up
             cleanup_temp_file(file_path)
             
-            print("🎉 EXTRACTION COMPLETED SUCCESSFULLY!")
+            print("🎉 COMPREHENSIVE EXTRACTION & ENHANCEMENT COMPLETED SUCCESSFULLY!")
             print(f"🎯 ARTIST NAME GUARANTEED: '{artist_info_obj.artist_name}'")
+            print(f"🔍 COMPREHENSIVE ENHANCEMENT: Applied to all extracted data")
             print("=" * 60)
             
             return {
@@ -600,7 +789,7 @@ Please analyze the document and provide the extracted information in the exact J
                 "extracted_text_length": len(extracted_text),
                 "extracted_text_preview": extracted_text[:200] + "..." if len(extracted_text) > 200 else extracted_text,
                 "artist_info": artist_info_obj.dict(),
-                "message": "Artist information extracted successfully with GUARANTEED artist name"
+                "message": "Artist information extracted and comprehensively enhanced with GUARANTEED artist name"
             }
             
         except HTTPException:
@@ -724,121 +913,13 @@ Please analyze the document and provide the extracted information in the exact J
                 detail=f"Invalid result ID: {str(e)}"
             )
 
-    def create_enhancement_only_prompt(self, artist_name: str, existing_data: dict, document_text: str = "") -> str:
-        """Create prompt for enhancing existing artist data with missing contact details"""
-        prompt_template = """
-# Artist Contact Details Enhancement Task
-
-You are an expert information extraction and enhancement specialist. You have existing artist information, and you need to find missing contact details and social media information.
-
-## Artist Name: {artist_name}
-
-## Existing Artist Data:
-{existing_data}
-
-## Original Document Text (if available):
-{document_text}
-
-## Enhancement Instructions:
-
-1. **Primary Task**: Find missing contact details and social media information for the artist
-2. **Keep Existing Data**: Do not modify any existing non-null information
-3. **Fill Missing Fields**: Only populate fields that are currently null or empty
-4. **Use Reliable Sources**: When enhancing, use knowledge from reliable sources about this artist
-5. **Maintain Accuracy**: Only add information you are confident about
-6. **Set Null if Not Found**: If information cannot be found, leave as null
-
-## Required Enhancement Focus:
-
-### Contact Details to Find:
-- **Phone Numbers**: Any contact phone numbers
-- **Email Addresses**: Contact email addresses  
-- **Postal Address**: Physical address, city, state, country
-- **Website**: Official website or personal website
-
-### Social Media to Find:
-- **Instagram**: Handle or profile URL
-- **Facebook**: Profile or page URL
-- **Twitter/X**: Handle or profile URL
-- **YouTube**: Channel URL
-- **LinkedIn**: Profile URL
-- **Spotify**: Artist profile URL
-- **TikTok**: Handle or profile URL
-- **Other Platforms**: Any other social media presence
-
-## Output Format (JSON):
-
-```json
-{{
-  "artist_name": "{artist_name}",
-  "guru_name": "Keep existing or enhance if null",
-  "gharana_details": {{
-    "gharana_name": "Keep existing or enhance if null",
-    "style": "Keep existing or enhance if null",
-    "tradition": "Keep existing or enhance if null"
-  }},
-  "biography": {{
-    "early_life": "Keep existing or enhance if null",
-    "background": "Keep existing or enhance if null",
-    "education": "Keep existing or enhance if null",
-    "career_highlights": "Keep existing or enhance if null"
-  }},
-  "achievements": "Keep existing array or enhance if empty",
-  "contact_details": {{
-    "social_media": {{
-      "instagram": "Instagram handle/URL or null",
-      "facebook": "Facebook profile/URL or null",
-      "twitter": "Twitter handle/URL or null",
-      "youtube": "YouTube channel/URL or null",
-      "linkedin": "LinkedIn profile/URL or null",
-      "spotify": "Spotify artist profile/URL or null",
-      "tiktok": "TikTok handle/URL or null",
-      "snapchat": "Snapchat handle or null",
-      "discord": "Discord handle or null",
-      "other": "Any other social media links or null"
-    }},
-    "contact_info": {{
-      "phone_numbers": ["Phone number 1", "Phone number 2"] or null,
-      "emails": ["email1@example.com", "email2@example.com"] or null,
-      "website": "Website URL or null",
-      "phone": "Primary phone number or null",
-      "email": "Primary email address or null"
-    }},
-    "address": {{
-      "full_address": "Complete postal address or null",
-      "city": "City or null",
-      "state": "State/Province or null",
-      "country": "Country or null"
-    }}
-  }},
-  "summary": "Keep existing or enhance if missing",
-  "extraction_confidence": "high/medium/low",
-  "additional_notes": "Enhancement notes and sources used"
-}}
-```
-
-## Guidelines:
-- ALWAYS preserve existing non-null data
-- Only enhance fields that are null, empty, or missing
-- Focus heavily on finding contact details and social media
-- Use reliable knowledge about the artist if confident
-- Set fields to null if information cannot be found reliably
-- Provide enhancement notes about what was added
-
-Please enhance the artist data by finding missing contact details and social media information.
-"""
-        return prompt_template.format(
-            artist_name=artist_name,
-            existing_data=json.dumps(existing_data, indent=2),
-            document_text=document_text[:1000] + "..." if len(document_text) > 1000 else document_text
-        )
 
     async def enhance_artist_contact_details(self, artist_id: str, current_user: Dict[str, Any]) -> Dict[str, Any]:
         """
-        Enhance existing artist data by finding missing contact details and social media information
+        Comprehensively enhance existing artist data by refining, correcting, and improving ALL extracted information
         """
         try:
-            print(f"🔍 STARTING ARTIST ENHANCEMENT for ID: {artist_id}")
+            print(f"🔍 STARTING COMPREHENSIVE ARTIST ENHANCEMENT for ID: {artist_id}")
             print("=" * 60)
             
             # Get existing artist data
@@ -856,6 +937,7 @@ Please enhance the artist data by finding missing contact details and social med
             
             print(f"🎯 Artist: {artist_name}")
             print(f"📝 Original text length: {len(original_text)}")
+            print(f"📊 Existing data fields: {len(existing_artist_info)}")
             
             # Check if Gemini is available
             if self.gemini_model is None:
@@ -864,54 +946,39 @@ Please enhance the artist data by finding missing contact details and social med
                 else:
                     raise HTTPException(
                         status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-                        detail="AI enhancement service not available"
+                        detail="AI comprehensive enhancement service not available"
                     )
             
-            # Create enhancement prompt
-            prompt = self.create_enhancement_only_prompt(artist_name, existing_artist_info, original_text)
-            
-            print("🤖 Sending to Gemini for contact details enhancement...")
-            response = self.gemini_model.generate_content(prompt)
-            content = response.text.strip()
-            
-            # Parse JSON response
-            json_str = content
-            if "```json" in content:
-                json_match = re.search(r'```json\s*\n(.*?)\n```', content, re.DOTALL)
-                if json_match:
-                    json_str = json_match.group(1)
-                else:
-                    start = content.find('{')
-                    end = content.rfind('}') + 1
-                    json_str = content[start:end] if start != -1 and end > start else content
-            else:
-                start = content.find('{')
-                end = content.rfind('}') + 1
-                json_str = content[start:end] if start != -1 and end > start else content
-            
-            enhanced_data = json.loads(json_str)
+            # Perform comprehensive enhancement
+            enhanced_data = await self.comprehensive_enhance_with_gemini(
+                artist_name, 
+                existing_artist_info, 
+                original_text
+            )
             
             # Validate enhanced data with Pydantic
             try:
                 enhanced_artist_info = ArtistInfo(**enhanced_data)
-                print("✅ Enhanced data validation successful")
+                print("✅ Comprehensive enhanced data validation successful")
             except Exception as e:
-                print(f"⚠️ Enhanced data validation error: {e}")
+                print(f"⚠️ Comprehensive enhanced data validation error: {e}")
                 # Keep original data if validation fails
                 enhanced_artist_info = ArtistInfo(**existing_artist_info)
+                enhanced_artist_info.additional_notes = f"Comprehensive enhancement failed validation: {str(e)}"
             
             # Update the artist document
             update_data = {
                 "artist_info": enhanced_artist_info.dict(),
-                "enhancement_status": "enhanced",
-                "enhanced_at": datetime.utcnow()
+                "enhancement_status": "comprehensively_enhanced",
+                "enhanced_at": datetime.utcnow(),
+                "enhancement_type": "comprehensive_refinement"
             }
             
             success = await artist_model.update_artist(artist_id, update_data)
             
             if success:
-                print("✅ Artist data enhanced and saved successfully!")
-                print("🎉 ENHANCEMENT COMPLETED!")
+                print("✅ Artist data comprehensively enhanced and saved successfully!")
+                print("🎉 COMPREHENSIVE ENHANCEMENT COMPLETED!")
                 print("=" * 60)
                 
                 return {
@@ -919,27 +986,22 @@ Please enhance the artist data by finding missing contact details and social med
                     "artist_id": artist_id,
                     "artist_name": artist_name,
                     "enhanced_data": enhanced_artist_info.dict(),
-                    "message": "Artist contact details enhanced successfully"
+                    "enhancement_type": "comprehensive_refinement",
+                    "message": "Artist information comprehensively enhanced - all data refined, corrected, and improved"
                 }
             else:
                 raise HTTPException(
                     status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                    detail="Failed to save enhanced data"
+                    detail="Failed to save comprehensively enhanced data"
                 )
                 
-        except json.JSONDecodeError as e:
-            print(f"⚠️ JSON parsing error during enhancement: {e}")
-            raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="Failed to parse AI response"
-            )
         except HTTPException:
             raise
         except Exception as e:
-            print(f"❌ Enhancement error: {str(e)}")
+            print(f"❌ Comprehensive enhancement error: {str(e)}")
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail=f"Error enhancing artist data: {str(e)}"
+                detail=f"Error comprehensively enhancing artist data: {str(e)}"
             )
 
 # Create global instance

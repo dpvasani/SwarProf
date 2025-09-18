@@ -70,7 +70,7 @@ async def enhance_artist_contact_details(
     current_user: Dict[str, Any] = Depends(get_current_user)
 ):
     """
-    Enhance existing artist data by finding missing contact details and social media information
-    This endpoint re-processes the artist data through AI to find missing contact information
+    Comprehensively enhance existing artist data by refining, correcting, and improving ALL extracted information
+    This endpoint re-processes ALL artist data through AI to refine, correct, and enhance everything - not just missing fields
     """
     return await artist_controller.enhance_artist_contact_details(artist_id, current_user)
