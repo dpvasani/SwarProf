@@ -421,23 +421,12 @@ Always output the final enhanced version of the data with perfect formatting and
             print(f"🔍 COMPREHENSIVE AI ENHANCEMENT for: '{artist_name}'")
             print(f"   Existing Data Fields: {len(existing_data)}")
             print(f"   Document Text Length: {len(document_text)}")
-            print(f"   Gemini Model Available: {self.gemini_model is not None}")
-            print(f"   API Key Available: {bool(settings.GEMINI_API_KEY)}")
             
             if self.gemini_model is None:
-                print("🔄 Gemini model not initialized, attempting to initialize...")
                 if genai is not None and settings.GEMINI_API_KEY:
-                    try:
-                        genai.configure(api_key=settings.GEMINI_API_KEY)
-                        self.gemini_model = genai.GenerativeModel(settings.GEMINI_MODEL_NAME)
-                        print("✅ Gemini model initialized successfully for enhancement")
-                    except Exception as init_error:
-                        print(f"❌ Failed to initialize Gemini for enhancement: {init_error}")
-                        existing_data["additional_notes"] = f"Gemini initialization failed: {str(init_error)}"
-                        return existing_data
+                    self.gemini_model = genai.GenerativeModel("gemini-1.5-flash")
                 else:
                     print("⚠️ Gemini not available for comprehensive enhancement")
-                    existing_data["additional_notes"] = "Gemini API not available for enhancement"
                     return existing_data
             
             prompt = self.create_comprehensive_enhancement_prompt(artist_name, existing_data, document_text)
@@ -953,9 +942,12 @@ Always output the final enhanced version of the data with perfect formatting and
             # Check if Gemini is available after initialization
             if self.gemini_model is None:
                 print("❌ Gemini model not available")
+                print(f"🔍 Debug - API Key: {settings.GEMINI_API_KEY[:20] if settings.GEMINI_API_KEY else 'None'}...")
+                print(f"🔍 Debug - Model Name: {settings.GEMINI_MODEL_NAME}")
+                print(f"🔍 Debug - Enhancement Enabled: {settings.ENABLE_AI_ENHANCEMENT}")
                 raise HTTPException(
                     status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-                    detail="AI comprehensive enhancement service not available - Gemini API not configured"
+                    detail=f"AI enhancement service not available - Gemini API not configured properly. Check API key and model settings."
                 )
             
             print("✅ Gemini model available, proceeding with comprehensive enhancement...")
