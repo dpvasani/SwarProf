@@ -33,14 +33,14 @@ from werkzeug.utils import secure_filename
 if genai is not None and settings.GEMINI_API_KEY:
     try:
         genai.configure(api_key=settings.GEMINI_API_KEY)
-        print(f"✅ Gemini API configured successfully with key: {settings.GEMINI_API_KEY[:20]}...")
+        print("✅ Gemini API configured successfully")
     except Exception as e:
         print(f"Warning: failed to configure Gemini SDK in ArtistController: {e}")
 else:
     if genai is None:
         print("Gemini SDK not available in ArtistController; skipping configuration.")
     else:
-        print(f"GEMINI_API_KEY not set (got: '{settings.GEMINI_API_KEY}'); Gemini features disabled in ArtistController.")
+        print("GEMINI_API_KEY not set; Gemini features disabled in ArtistController.")
 
 class ArtistController:
     
@@ -61,14 +61,31 @@ class ArtistController:
             # Initialize Gemini model (if available)
             if genai is not None and settings.GEMINI_API_KEY:
                 try:
-                    self.gemini_model = genai.GenerativeModel('gemini-1.5-flash')
-                    print("✅ Gemini model initialized successfully")
+                    print(f"🤖 Initializing Gemini model: {settings.GEMINI_MODEL_NAME}")
+                    print(f"🔑 Using API key: {settings.GEMINI_API_KEY[:20]}...")
+                    
+                    # Configure API key
+                    genai.configure(api_key=settings.GEMINI_API_KEY)
+                    
+                    # Initialize model
+                    self.gemini_model = genai.GenerativeModel(settings.GEMINI_MODEL_NAME)
+                    
+                    # Test the model with a simple request
+                    test_response = self.gemini_model.generate_content("Hello, test message")
+                    print(f"🧪 Gemini test successful: {test_response.text[:50]}...")
+                    print("✅ Gemini model initialized and tested successfully")
                 except Exception as e:
                     print(f"⚠️ Gemini model initialization failed: {e}")
+                    print(f"🔍 API Key length: {len(settings.GEMINI_API_KEY) if settings.GEMINI_API_KEY else 0}")
+                    print(f"🔍 Model name: {settings.GEMINI_MODEL_NAME}")
                     self.gemini_model = None
             else:
                 self.gemini_model = None
-                print("⚠️ Gemini model not available")
+                if not settings.GEMINI_API_KEY:
+                    print(f"⚠️ Gemini API key not found in environment (got: '{settings.GEMINI_API_KEY}')")
+                if genai is None:
+                    print("⚠️ Gemini SDK not installed")
+                print("⚠️ Gemini model not available - AI enhancement disabled")
             
             print("✅ ArtistController initialized successfully")
             
