@@ -256,118 +256,108 @@ Please analyze the document and provide the extracted information in the exact J
     
     def create_comprehensive_enhancement_prompt(self, artist_name: str, existing_data: dict, document_text: str = "") -> str:
         """Create prompt for comprehensive AI enhancement that refines ALL extracted data"""
-        prompt_template = """
-# Comprehensive Artist Information Enhancement and Refinement Task
+        prompt_template = """# Comprehensive Artist Information Enhancement and Refinement Task
 
-You are an expert information analyst and enhancement specialist. You have been provided with raw extracted artist information that may contain errors, incomplete data, fragmented text, or inaccuracies due to imperfect extraction processes.
+You are an expert information analyst and enhancement specialist. Take the following extracted data as raw input. The extraction may contain missing fields, inaccurate values, fragmented text, grammar mistakes, and poor formatting.
 
-Your task is to take this raw data as input context and produce a completely refined, corrected, and enhanced response that is reliable, consistent, and human-readable.
+Your task is to comprehensively refine, correct, and enhance ALL of the extracted information. Specifically:
+
+1. **Use all extracted details as context** – do not limit enhancement to only missing (null) fields
+2. **Fix inaccuracies or inconsistencies** caused by poor extraction
+3. **Repair broken or fragmented text**, ensuring proper grammar, spelling, sentence structure, and readability
+4. **Improve formatting** – make the output clean, professional, and human-readable
+5. **Enrich and polish** the biography/details so that the final version is complete, accurate, and coherent
+6. **Ensure the final response** looks like a carefully edited and enhanced version of the extracted input
 
 ## Artist Name: {artist_name}
 
-## Raw Extracted Data (may contain errors, fragments, or incomplete information):
+## Raw Extracted Data (may contain errors, fragments, formatting issues):
+```json
 {existing_data}
+```
 
 ## Original Document Text (for additional context):
 {document_text}
 
-## Enhancement Instructions:
+## Example of Enhancement Quality Expected:
 
-### 1. **Data Validation & Correction**
-- Review ALL existing fields for accuracy and consistency
-- Correct any obvious errors, typos, or misinterpretations
-- Fix fragmented or broken text caused by OCR or extraction errors
-- Ensure all information is factually consistent and logical
+**Input (raw extraction):**
+Biography: "SHUBHODEEP SINHA  is a 15 year Indian national brought up In Shanghai.  Studying in grade 10 in Livingston American School.   SHUBHO as we fondly call him  is a  musical prodigy who has developed immense interest in Indian Classical Music at a very young age."
 
-### 2. **Text Refinement & Rewriting**
-- Rewrite fragmented or poorly structured text into clean, natural language
-- Improve grammar, sentence structure, and readability
-- Ensure professional and coherent presentation
-- Remove extraction artifacts and formatting issues
-
-### 3. **Data Completion & Enhancement**
-- Fill in missing information where possible from the document context
-- Enhance existing partial information to be more complete
-- Add relevant details that may have been missed in initial extraction
-- Ensure all related information is properly connected and organized
-
-### 4. **Quality Assurance**
-- Verify that all enhanced information is supported by the source document
-- Ensure consistency across all fields
-- Maintain factual accuracy - do not fabricate information not present in the source
-- Provide appropriate confidence levels based on source reliability
+**Output (enhanced):**
+Biography: "Shubhodeep Sinha is a 15-year-old Indian national who was brought up in Shanghai. He is currently studying in Grade 10 at Livingston American School. Fondly called 'Shubho,' he is a musical prodigy with a deep passion for Indian Classical Music, which he began exploring at a very young age."
 
 ## Output Requirements:
 
-Produce a completely refined and enhanced JSON response with the following structure:
+Produce a completely refined and enhanced JSON response. Fix ALL text formatting, grammar, and presentation issues:
 
 ```json
 {{
   "artist_name": "{artist_name}",
-  "guru_name": "Enhanced and corrected guru/teacher name or null",
+  "guru_name": "Enhanced and corrected guru/teacher name with proper formatting or null",
   "gharana_details": {{
-    "gharana_name": "Refined gharana name or null",
-    "style": "Enhanced musical/dance style description or null",
-    "tradition": "Improved cultural tradition description or null"
+    "gharana_name": "Refined gharana name with proper formatting or null",
+    "style": "Enhanced musical/dance style description with proper grammar or null",
+    "tradition": "Improved cultural tradition description with clean formatting or null"
   }},
   "biography": {{
-    "early_life": "Refined and enhanced early life details or null",
-    "background": "Improved background information with better structure or null",
-    "education": "Enhanced education details with corrections or null",
-    "career_highlights": "Refined career highlights with better presentation or null"
+    "early_life": "Refined and enhanced early life details with proper grammar and formatting or null",
+    "background": "Improved background information with perfect grammar, proper sentence structure, and professional presentation or null",
+    "education": "Enhanced education details with corrections and proper formatting or null",
+    "career_highlights": "Refined career highlights with better presentation and clean language or null"
   }},
   "achievements": [
     {{
-      "type": "Refined achievement type",
-      "title": "Enhanced and corrected achievement title",
+      "type": "Refined achievement type with proper formatting",
+      "title": "Enhanced and corrected achievement title with proper grammar",
       "year": "Validated year or null",
-      "details": "Improved achievement details with better description or null"
+      "details": "Improved achievement details with better description and clean formatting or null"
     }}
   ],
   "contact_details": {{
     "social_media": {{
-      "instagram": "Validated and corrected Instagram handle/URL or null",
-      "facebook": "Enhanced Facebook profile/URL or null",
-      "twitter": "Corrected Twitter handle/URL or null",
-      "youtube": "Refined YouTube channel/URL or null",
-      "linkedin": "Enhanced LinkedIn profile/URL or null",
-      "spotify": "Corrected Spotify artist profile/URL or null",
-      "tiktok": "Validated TikTok handle/URL or null",
-      "snapchat": "Enhanced Snapchat handle or null",
-      "discord": "Corrected Discord handle or null",
+      "instagram": "Validated and properly formatted Instagram handle/URL or null",
+      "facebook": "Enhanced and properly formatted Facebook profile/URL or null",
+      "twitter": "Corrected and properly formatted Twitter handle/URL or null",
+      "youtube": "Refined and properly formatted YouTube channel/URL or null",
+      "linkedin": "Enhanced and properly formatted LinkedIn profile/URL or null",
+      "spotify": "Corrected and properly formatted Spotify artist profile/URL or null",
+      "tiktok": "Validated and properly formatted TikTok handle/URL or null",
+      "snapchat": "Enhanced and properly formatted Snapchat handle or null",
+      "discord": "Corrected and properly formatted Discord handle or null",
       "other": "Any other validated social media links or null"
     }},
     "contact_info": {{
-      "phone_numbers": ["Validated and formatted phone numbers"] or null,
-      "emails": ["Corrected and validated email addresses"] or null,
-      "website": "Enhanced and validated website URL or null",
-      "phone": "Primary validated phone number or null",
-      "email": "Primary validated email address or null"
+      "phone_numbers": ["Validated and properly formatted phone numbers"] or null,
+      "emails": ["Corrected and properly formatted email addresses"] or null,
+      "website": "Enhanced and properly formatted website URL or null",
+      "phone": "Primary validated and properly formatted phone number or null",
+      "email": "Primary validated and properly formatted email address or null"
     }},
     "address": {{
-      "full_address": "Enhanced and properly formatted complete address or null",
-      "city": "Corrected city name or null",
-      "state": "Enhanced state/province name or null",
-      "country": "Validated country name or null"
+      "full_address": "Enhanced and properly formatted complete address with correct grammar or null",
+      "city": "Corrected and properly formatted city name or null",
+      "state": "Enhanced and properly formatted state/province name or null",
+      "country": "Validated and properly formatted country name or null"
     }}
   }},
-  "summary": "Completely rewritten, comprehensive, and well-structured summary that presents the artist's profile in a professional and engaging manner",
+  "summary": "Completely rewritten, comprehensive, and well-structured summary with perfect grammar, proper sentence structure, and professional presentation that presents the artist's profile in an engaging manner",
   "extraction_confidence": "Updated confidence level based on enhancement quality (high/medium/low)",
-  "additional_notes": "Enhanced notes including information about corrections made, data quality improvements, and any important observations about the enhancement process"
+  "additional_notes": "Enhanced notes with proper formatting including information about corrections made, data quality improvements, grammar fixes, formatting improvements, and any important observations about the comprehensive enhancement process"
 }}
 ```
 
-## Critical Guidelines:
+## CRITICAL ENHANCEMENT GUIDELINES:
 
-1. **Comprehensive Enhancement**: Don't just fill missing fields - improve ALL existing data
-2. **Error Correction**: Fix any inaccuracies, typos, or extraction errors you identify
-3. **Text Quality**: Rewrite fragmented or poorly structured text into professional, readable content
-4. **Factual Accuracy**: Only enhance with information that can be verified from the source document
-5. **Consistency**: Ensure all information is internally consistent and logically connected
-6. **Professional Presentation**: Present all information in a polished, professional manner
-7. **Transparency**: Note significant corrections or enhancements in the additional_notes field
+1. **Fix ALL Text Issues**: Correct grammar, spelling, punctuation, capitalization, and sentence structure
+2. **Improve Formatting**: Remove extra spaces, fix capitalization, ensure proper punctuation
+3. **Enhance Readability**: Rewrite fragmented text into smooth, natural language
+4. **Professional Presentation**: Make all text sound polished and professional
+5. **Comprehensive Enhancement**: Improve ALL existing data, not just missing fields
+6. **Maintain Accuracy**: Only enhance with information supported by the source document
+7. **Document Changes**: Note significant improvements in the additional_notes field
 
-Please provide the completely enhanced and refined artist information in the exact JSON format specified above.
+Always output the final enhanced version of the data with perfect formatting and grammar.
 """
         return prompt_template.format(
             artist_name=artist_name,
@@ -444,6 +434,12 @@ Please provide the completely enhanced and refined artist information in the exa
                     print("⚠️ Gemini not available for comprehensive enhancement")
                     return existing_data
             # Parse JSON from response
+            prompt = self.create_comprehensive_enhancement_prompt(artist_name, existing_data, document_text)
+            response = self.gemini_model.generate_content(prompt)
+            content = response.text.strip()
+            
+            print(f"   Gemini enhancement response length: {len(content)}")
+            
             json_str = content
             if "```json" in content:
                 json_match = re.search(r'```json\s*\n(.*?)\n```', content, re.DOTALL)
@@ -731,6 +727,12 @@ Please provide the completely enhanced and refined artist information in the exa
             
             print(f"✅ FINAL ENHANCED ARTIST NAME: '{enhanced_artist_info_raw['artist_name']}'")
             
+            # Log enhancement details
+            if enhanced_artist_info_raw.get("summary"):
+                print(f"📝 Enhanced Summary Preview: {enhanced_artist_info_raw['summary'][:100]}...")
+            if enhanced_artist_info_raw.get("additional_notes"):
+                print(f"📋 Enhancement Notes: {enhanced_artist_info_raw['additional_notes'][:100]}...")
+            
             # STEP 5: VALIDATE AND CREATE PYDANTIC MODEL
             try:
                 artist_info_obj = ArtistInfo(**enhanced_artist_info_raw)
@@ -930,15 +932,19 @@ Please provide the completely enhanced and refined artist information in the exa
             print(f"📝 Original text length: {len(original_text)}")
             print(f"📊 Existing data fields: {len(existing_artist_info)}")
             
-            # Check if Gemini is available
+            # Initialize Gemini if needed
             if self.gemini_model is None:
-                if genai is not None and settings.GEMINI_API_KEY:
-                    self.gemini_model = genai.GenerativeModel("gemini-1.5-flash")
-                else:
-                    raise HTTPException(
-                        status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-                        detail="AI comprehensive enhancement service not available"
-                    )
+                await self.initialize()
+            
+            # Check if Gemini is available after initialization
+            if self.gemini_model is None:
+                print("❌ Gemini model not available")
+                raise HTTPException(
+                    status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                    detail="AI comprehensive enhancement service not available - Gemini API not configured"
+                )
+            
+            print("✅ Gemini model available, proceeding with comprehensive enhancement...")
             
             # Perform comprehensive enhancement
             enhanced_data = await self.comprehensive_enhance_with_gemini(
@@ -946,6 +952,8 @@ Please provide the completely enhanced and refined artist information in the exa
                 existing_artist_info, 
                 original_text
             )
+            
+            print(f"🔍 Enhancement completed, validating data...")
             
             # Validate enhanced data with Pydantic
             try:
