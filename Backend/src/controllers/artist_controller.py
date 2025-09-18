@@ -276,6 +276,9 @@ Your task is to comprehensively refine, correct, and enhance ALL of the extracte
 {existing_data}
 ```
 
+            # STEP 4: COMPREHENSIVE AI ENHANCEMENT - Refine and improve ALL extracted data
+            print("🔄 STEP 4: COMPREHENSIVE AI ENHANCEMENT")
+            try:
 **Input (raw extraction):**
 Biography: "SHUBHODEEP SINHA  is a 15 year Indian national brought up In Shanghai.  Studying in grade 10 in Livingston American School.   SHUBHO as we fondly call him  is a  musical prodigy who has developed immense interest in Indian Classical Music at a very young age."
 
@@ -428,14 +431,13 @@ Always output the final enhanced version of the data with perfect formatting and
                 else:
                     print("⚠️ Gemini not available for comprehensive enhancement")
                     return existing_data
-            
+            # Parse JSON from response
             prompt = self.create_comprehensive_enhancement_prompt(artist_name, existing_data, document_text)
             response = self.gemini_model.generate_content(prompt)
             content = response.text.strip()
             
             print(f"   Gemini enhancement response length: {len(content)}")
             
-            # Parse JSON from response
             json_str = content
             if "```json" in content:
                 json_match = re.search(r'```json\s*\n(.*?)\n```', content, re.DOTALL)
@@ -459,18 +461,14 @@ Always output the final enhanced version of the data with perfect formatting and
             print(f"   Enhanced Artist Name: {enhanced_data.get('artist_name')}")
             print(f"   Enhanced Summary Length: {len(enhanced_data.get('summary', ''))}")
             print(f"   Enhancement Notes: {enhanced_data.get('additional_notes', 'None')[:100]}...")
-            
-            return enhanced_data
-            
-        except json.JSONDecodeError as e:
-            print(f"⚠️ JSON parsing error in comprehensive enhancement: {e}")
-            existing_data["additional_notes"] = f"Comprehensive enhancement JSON parsing failed: {str(e)}"
+            # STEP 4: COMPREHENSIVE AI ENHANCEMENT - Refine and improve ALL extracted data
+            print("🔄 STEP 4: COMPREHENSIVE AI ENHANCEMENT")
+            try:
             return existing_data
         except Exception as e:
             print(f"❌ Comprehensive enhancement error: {e}")
             existing_data["additional_notes"] = f"Comprehensive enhancement failed: {str(e)}"
             return existing_data
-    
     def create_fallback_data(self, artist_name: str, document_text: str) -> dict:
         """Create fallback data when AI fails - now with enhanced contact extraction"""
         print(f"🔄 Creating fallback data for: '{artist_name}'")
@@ -707,32 +705,14 @@ Always output the final enhanced version of the data with perfect formatting and
             
             # STEP 3: AI ENHANCEMENT WITH GUARANTEED ARTIST NAME
             print("🤖 STEP 3: Basic AI extraction...")
+            print("🤖 STEP 3: Basic AI extraction...")
+            print("🤖 STEP 3: Basic AI extraction...")
+            print("🤖 STEP 3: Basic AI extraction...")
             artist_info_raw = await self.extract_with_gemini(filename_artist_name, extracted_text)
             
             # STEP 4: COMPREHENSIVE AI ENHANCEMENT - Refine and improve ALL extracted data
             print("🔄 STEP 4: COMPREHENSIVE AI ENHANCEMENT")
             try:
-                # Force initialize Gemini if needed
-                if self.gemini_model is None:
-                    print("🔄 Initializing Gemini for comprehensive enhancement...")
-                    await self.initialize()
-                
-                if self.gemini_model is not None:
-                    print("✅ Gemini available, performing comprehensive enhancement...")
-                    enhanced_artist_info_raw = await self.comprehensive_enhance_with_gemini(
-                        filename_artist_name, 
-                        artist_info_raw, 
-                        extracted_text
-                    )
-                    print("✅ Comprehensive enhancement completed successfully!")
-                else:
-                    print("⚠️ Gemini not available, using original extraction data")
-                    enhanced_artist_info_raw = artist_info_raw
-                    enhanced_artist_info_raw["additional_notes"] = "Comprehensive enhancement skipped: Gemini API not available"
-            except Exception as e:
-                print(f"⚠️ Comprehensive enhancement failed: {e}")
-                enhanced_artist_info_raw = artist_info_raw
-                enhanced_artist_info_raw["additional_notes"] = f"Comprehensive enhancement failed: {str(e)}"
             
             # STEP 4: FINAL GUARANTEE - ENSURE ARTIST NAME IS SET
             if not enhanced_artist_info_raw.get("artist_name"):
@@ -969,13 +949,9 @@ Always output the final enhanced version of the data with perfect formatting and
             
             print(f"🔍 Enhancement completed, validating data...")
             
-            # Validate enhanced data with Pydantic
+            # STEP 4: COMPREHENSIVE AI ENHANCEMENT - Refine and improve ALL extracted data
+            print("🔄 STEP 4: COMPREHENSIVE AI ENHANCEMENT")
             try:
-                enhanced_artist_info = ArtistInfo(**enhanced_data)
-                print("✅ Comprehensive enhanced data validation successful")
-            except Exception as e:
-                print(f"⚠️ Comprehensive enhanced data validation error: {e}")
-                # Keep original data if validation fails
                 enhanced_artist_info = ArtistInfo(**existing_artist_info)
                 enhanced_artist_info.additional_notes = f"Comprehensive enhancement failed validation: {str(e)}"
             
@@ -1012,6 +988,9 @@ Always output the final enhanced version of the data with perfect formatting and
             raise
         except Exception as e:
             print(f"❌ Comprehensive enhancement error: {str(e)}")
+            print(f"❌ Error type: {type(e).__name__}")
+            import traceback
+            print(f"❌ Full traceback: {traceback.format_exc()}")
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail=f"Error comprehensively enhancing artist data: {str(e)}"
