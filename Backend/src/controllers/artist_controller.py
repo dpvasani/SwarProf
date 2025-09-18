@@ -958,13 +958,13 @@ Always output the final enhanced version of the data with perfect formatting and
             
             print(f"🔍 Enhancement completed, validating data...")
             
-            # Validate enhanced data with Pydantic
+            # Validate enhanced data
             try:
                 enhanced_artist_info = ArtistInfo(**enhanced_data)
-                print("✅ Comprehensive enhanced data validation successful")
+                print("✅ Enhanced data validation successful")
             except Exception as e:
-                print(f"⚠️ Comprehensive enhanced data validation error: {e}")
-                # Keep original data if validation fails
+                print(f"⚠️ Enhanced data validation error: {e}")
+                # Create enhanced object with existing data as fallback
                 enhanced_artist_info = ArtistInfo(**existing_artist_info)
                 enhanced_artist_info.additional_notes = f"Comprehensive enhancement failed validation: {str(e)}"
             
@@ -1001,6 +1001,9 @@ Always output the final enhanced version of the data with perfect formatting and
             raise
         except Exception as e:
             print(f"❌ Comprehensive enhancement error: {str(e)}")
+            print(f"❌ Error type: {type(e).__name__}")
+            import traceback
+            print(f"❌ Full traceback: {traceback.format_exc()}")
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail=f"Error comprehensively enhancing artist data: {str(e)}"
