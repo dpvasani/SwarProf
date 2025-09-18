@@ -445,13 +445,9 @@ Always output the final enhanced version of the data with perfect formatting and
                     json_str = json_match.group(1)
                 else:
                     start = content.find('{')
-                    end = content.rfind('}') + 1
-                    json_str = content[start:end] if start != -1 and end > start else content
-            else:
-                start = content.find('{')
-                end = content.rfind('}') + 1
-                json_str = content[start:end] if start != -1 and end > start else content
-            
+            # STEP 4: COMPREHENSIVE AI ENHANCEMENT - Refine and improve ALL extracted data
+            print("🔄 STEP 4: COMPREHENSIVE AI ENHANCEMENT")
+            try:
             enhanced_data = json.loads(json_str)
             
             # GUARANTEE artist name is preserved
@@ -462,11 +458,15 @@ Always output the final enhanced version of the data with perfect formatting and
             print(f"   Enhanced Summary Length: {len(enhanced_data.get('summary', ''))}")
             print(f"   Enhancement Notes: {enhanced_data.get('additional_notes', 'None')[:100]}...")
             # STEP 4: COMPREHENSIVE AI ENHANCEMENT - Refine and improve ALL extracted data
+            print(f"⚠️ Raw response that failed to parse: {content[:500]}...")
             print("🔄 STEP 4: COMPREHENSIVE AI ENHANCEMENT")
             try:
             return existing_data
         except Exception as e:
             print(f"❌ Comprehensive enhancement error: {e}")
+            print(f"❌ Error type: {type(e).__name__}")
+            import traceback
+            print(f"❌ Full traceback: {traceback.format_exc()}")
             existing_data["additional_notes"] = f"Comprehensive enhancement failed: {str(e)}"
             return existing_data
     def create_fallback_data(self, artist_name: str, document_text: str) -> dict:
@@ -704,6 +704,7 @@ Always output the final enhanced version of the data with perfect formatting and
             print(f"📖 Text extracted: {len(extracted_text)} characters")
             
             # STEP 3: AI ENHANCEMENT WITH GUARANTEED ARTIST NAME
+            print("🤖 STEP 3: Basic AI extraction...")
             print("🤖 STEP 3: Basic AI extraction...")
             print("🤖 STEP 3: Basic AI extraction...")
             print("🤖 STEP 3: Basic AI extraction...")
